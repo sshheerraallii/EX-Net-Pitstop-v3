@@ -1,0 +1,236 @@
+.switch-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(15, 15, 15, 0.8) 0%, rgba(20, 10, 40, 0.8) 100%);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+
+.switch-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.switch-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin: 0;
+}
+
+.port-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #a78bfa;
+}
+
+.switch-display {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.ports-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  min-width: fit-content;
+}
+
+.port {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: #9ca3af;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.port:hover:not(:disabled) {
+  background: rgba(124, 58, 237, 0.15);
+  border-color: rgba(124, 58, 237, 0.5);
+  color: #d1d5db;
+}
+
+/* Required port with green flashing */
+.port.required {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%);
+  border-color: #10b981;
+  color: #6ee7b7;
+  animation: greenFlash 0.8s infinite;
+}
+
+.port.required .required-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 0.6rem;
+  color: #10b981;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes greenFlash {
+  0%, 100% {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(16, 185, 129, 0.15) 100%);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+    box-shadow: 0 0 8px 2px rgba(16, 185, 129, 0.6);
+  }
+}
+
+/* Selected port */
+.port.selected {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  border-color: #a78bfa;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.6);
+}
+
+.port.selected::after {
+  content: '✓';
+  position: absolute;
+  font-size: 1rem;
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Disabled state */
+.port:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.port.disabled:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.port-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #9ca3af;
+}
+
+.legend-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.legend-icon.empty {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.legend-icon.selected {
+  background: #7c3aed;
+  border-color: #a78bfa;
+}
+
+.legend-icon.required {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  animation: greenFlash 0.8s infinite;
+}
+
+@media (max-width: 768px) {
+  .switch-panel {
+    padding: 16px;
+  }
+
+  .switch-header {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .switch-header h3 {
+    font-size: 1rem;
+  }
+
+  .port-stats {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .ports-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .port {
+    width: 40px;
+    height: 40px;
+    font-size: 0.75rem;
+  }
+
+  .port-legend {
+    gap: 12px;
+    font-size: 0.75rem;
+  }
+
+  .legend-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ports-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .port {
+    width: 36px;
+    height: 36px;
+    font-size: 0.7rem;
+  }
+}

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Port Mapper - Extreme Pitstop Challenge</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #10b981;
+    }
+
+    .controls {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 30px;
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    label {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    select, input {
+      padding: 8px 12px;
+      background: #0f172a;
+      color: #e5e7eb;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: #10b981;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #10b981;
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: #059669;
+    }
+
+    button.secondary {
+      background: #6366f1;
+    }
+
+    button.secondary:hover {
+      background: #4f46e5;
+    }
+
+    button.danger {
+      background: #ef4444;
+    }
+
+    button.danger:hover {
+      background: #dc2626;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .panel {
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .panel h2 {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #10b981;
+    }
+
+    .image-container {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      margin-bottom: 15px;
+    }
+
+    #scenarioImage {
+      width: 100%;
+      height: auto;
+      display: block;
+      cursor: crosshair;
+      border: 2px solid #475569;
+      border-radius: 4px;
+    }
+
+    #overlayCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      cursor: crosshair;
+    }
+
+    .info-text {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 15px;
+    }
+
+    .ports-list {
+      max-height: 600px;
+      overflow-y: auto;
+      background: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      padding: 10px;
+    }
+
+    .port-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      background: #1e293b;
+      margin-bottom: 8px;
+      border-radius: 4px;
+      border-left: 3px solid #10b981;
+      font-size: 13px;
+    }
+
+    .port-item.port-1 { border-left-color: #ef4444; }
+    .port-item.port-2 { border-left-color: #f97316; }
+    .port-item.port-3 { border-left-color: #eab308; }
+    .port-item.port-4 { border-left-color: #22c55e; }
+
+    .port-number {
+      font-weight: 700;
+      color: #10b981;
+      min-width: 60px;
+    }
+
+    .port-coords {
+      color: #64748b;
+      margin: 0 10px;
+      flex: 1;
+    }
+
+    .delete-port {
+      padding: 4px 8px;
+      background: #dc2626;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .delete-port:hover {
+      background: #991b1b;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .actions button {
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .progress {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-top: 10px;
+      padding: 10px;
+      background: #0f172a;
+      border-radius: 4px;
+    }
+
+    @media (max-width: 1200px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .success-message {
+      padding: 12px 16px;
+      background: #10b981;
+      color: #000;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    .instructions {
+      background: #0f172a;
+      border-left: 3px solid #10b981;
+      padding: 15px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #cbd5e1;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 Port Mapper - Extreme Pitstop Challenge</h1>
+
+    <div class="controls">
+      <label>
+        Scenario:
+        <select id="scenarioSelect">
+          <option value="AP">AP Scenario 1</option>
+          <option value="AP2">AP Scenario 2</option>
+          <option value="AP3">AP Scenario 3</option>
+          <option value="Branch">Branch Scenario 1</option>
+          <option value="Branch2">Branch Scenario 2</option>
+          <option value="Branch3">Branch Scenario 3</option>
+          <option value="DataCenter">DataCenter Scenario 1</option>
+          <option value="DataCenter2">DataCenter Scenario 2</option>
+          <option value="DataCenter3">DataCenter Scenario 3</option>
+          <option value="Firmware">Firmware Scenario 1</option>
+          <option value="Firmware2">Firmware Scenario 2</option>
+          <option value="Firmware3">Firmware Scenario 3</option>
+        </select>
+      </label>
+      <button onclick="loadScenario()">Load Scenario</button>
+      <button class="secondary" onclick="downloadJSON()">Download portConfig.json</button>
+      <button class="secondary" onclick="downloadCSV()">Download CSV</button>
+      <button class="danger" onclick="clearAllPorts()">Clear All Ports</button>
+    </div>
+
+    <div class="layout">
+      <div class="panel">
+        <h2>📸 Scenario Image (Click to Map Ports)</h2>
+        <div class="instructions">
+          <strong>Instructions:</strong>
+          <ol style="margin-left: 20px; margin-top: 10px;">
+            <li>Select a scenario from the dropdown</li>
+            <li>Click on each port in the image</li>
+            <li>Ports will appear as green squares in the preview</li>
+            <li>Download the JSON when all ports are mapped</li>
+          </ol>
+        </div>
+        <div class="image-container">
+          <img id="scenarioImage" alt="Scenario image">
+          <canvas id="overlayCanvas"></canvas>
+        </div>
+        <div class="info-text">
+          Image dimensions: <span id="imageDims">0 × 0</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>📍 Mapped Ports</h2>
+        <div id="successMessage"></div>
+        <div class="progress">
+          Ports mapped: <strong id="portCount">0</strong> / 24
+        </div>
+        <div class="ports-list" id="portsList"></div>
+        <div class="actions">
+          <button class="secondary" onclick="undoLastPort()">↶ Undo</button>
+          <button class="secondary" onclick="downloadJSON()">Download JSON</button>
+          <button class="danger" onclick="clearAllPorts()">Clear All</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let ports = [];
+    let currentImage = null;
+    let imageNaturalWidth = 0;
+    let imageNaturalHeight = 0;
+    let canvas, ctx;
+
+    const scenarioMap = {
+      'AP': 'APScenario1.png',
+      'AP2': 'APScenario2.png',
+      'AP3': 'APScenario3.png',
+      'Branch': 'BranchScenario1.png',
+      'Branch2': 'BranchScenario2.png',
+      'Branch3': 'BranchScenario3.png',
+      'DataCenter': 'DataCenterScenario1.png',
+      'DataCenter2': 'DataCenterScenario2.png',
+      'DataCenter3': 'DataCenterScenario3.png',
+      'Firmware': 'FirmwareScenario1.png',
+      'Firmware2': 'FirmwareScenario2.png',
+      'Firmware3': 'FirmwareScenario3.png',
+    };
+
+    function loadScenario() {
+      const select = document.getElementById('scenarioSelect');
+      const scenarioKey = select.value;
+      const filename = scenarioMap[scenarioKey];
+
+      const img = document.getElementById('scenarioImage');
+      img.src = `/scenarios/${filename}`;
+
+      img.onload = function() {
+        imageNaturalWidth = img.naturalWidth;
+        imageNaturalHeight = img.naturalHeight;
+        document.getElementById('imageDims').textContent = `${imageNaturalWidth} × ${imageNaturalHeight}`;
+
+        // Setup canvas
+        canvas = document.getElementById('overlayCanvas');
+        ctx = canvas.getContext('2d');
+        canvas.width = img.offsetWidth;
+        canvas.height = img.offsetHeight;
+
+        // Clear ports when loading new scenario
+        ports = [];
+        updatePortsList();
+        redrawOverlay();
+      };
+
+      img.onerror = function() {
+        alert(`Failed to load image: /scenarios/${filename}`);
+      };
+    }
+
+    function handleCanvasClick(e) {
+      const canvas = document.getElementById('overlayCanvas');
+      const img = document.getElementById('scenarioImage');
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = imageNaturalWidth / img.offsetWidth;
+      const scaleY = imageNaturalHeight / img.offsetHeight;
+
+      const x = Math.round((e.clientX - rect.left) * scaleX);
+      const y = Math.round((e.clientY - rect.top) * scaleY);
+
+      // Find which port number (1-24) based on which position
+      const portNumber = ports.length + 1;
+
+      console.log(`Clicked at (${x}, ${y}) - Port ${portNumber}`); // Debug log
+
+      if (portNumber <= 24) {
+        ports.push({ x, y, port: portNumber, status: 'active' });
+        updatePortsList();
+        redrawOverlay();
+
+        // Show success for just-mapped port
+        const successEl = document.getElementById('successMessage');
+        successEl.innerHTML = `<div class="success-message">✓ Port ${portNumber} mapped at (${x}, ${y})</div>`;
+        setTimeout(() => {
+          successEl.innerHTML = '';
+        }, 3000);
+      } else {
+        alert('All 24 ports have been mapped!');
+      }
+    }
+
+    // Add click handler to canvas
+    document.addEventListener('DOMContentLoaded', function() {
+      const canvas = document.getElementById('overlayCanvas');
+      if (canvas) {
+        canvas.addEventListener('click', handleCanvasClick);
+      }
+    });
+
+    function redrawOverlay() {
+      const img = document.getElementById('scenarioImage');
+      if (!canvas) return;
+
+      canvas.width = img.offsetWidth;
+      canvas.height = img.offsetHeight;
+
+      ports.forEach(port => {
+        const x = (port.x / imageNaturalWidth) * canvas.width;
+        const y = (port.y / imageNaturalHeight) * canvas.height;
+        const size = 60;
+
+        // Draw square
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2;
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.3)';
+        ctx.fillRect(x - size / 2, y - size / 2, size, size);
+        ctx.strokeRect(x - size / 2, y - size / 2, size, size);
+
+        // Draw port number
+        ctx.fillStyle = '#10b981';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(port.port, x, y);
+      });
+    }
+
+    function updatePortsList() {
+      const list = document.getElementById('portsList');
+      const count = document.getElementById('portCount');
+
+      count.textContent = ports.length;
+
+      list.innerHTML = ports.map(port => `
+        <div class="port-item port-${(port.port % 4) + 1}">
+          <span class="port-number">Port ${port.port}</span>
+          <span class="port-coords">(${port.x}, ${port.y})</span>
+          <button class="delete-port" onclick="deletePort(${port.port})">Delete</button>
+        </div>
+      `).join('');
+    }
+
+    function deletePort(portNumber) {
+      ports = ports.filter(p => p.port !== portNumber);
+      // Renumber remaining ports
+      ports = ports.map((p, i) => ({ ...p, port: i + 1 }));
+      updatePortsList();
+      redrawOverlay();
+    }
+
+    function undoLastPort() {
+      if (ports.length > 0) {
+        ports.pop();
+        updatePortsList();
+        redrawOverlay();
+        const successEl = document.getElementById('successMessage');
+        successEl.innerHTML = `<div class="success-message">↶ Undo - Port removed</div>`;
+        setTimeout(() => {
+          successEl.innerHTML = '';
+        }, 2000);
+      }
+    }
+
+    function clearAllPorts() {
+      if (confirm('Clear all mapped ports?')) {
+        ports = [];
+        updatePortsList();
+        redrawOverlay();
+        document.getElementById('successMessage').innerHTML = '';
+      }
+    }
+
+    function downloadJSON() {
+      if (ports.length === 0) {
+        alert('No ports mapped yet!');
+        return;
+      }
+
+      const json = JSON.stringify(ports, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'portConfig.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadCSV() {
+      if (ports.length === 0) {
+        alert('No ports mapped yet!');
+        return;
+      }
+
+      let csv = 'port,x,y,status\n';
+      ports.forEach(p => {
+        csv += `${p.port},${p.x},${p.y},${p.status}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'portConfig.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Load first scenario on page load
+    window.addEventListener('load', () => {
+      loadScenario();
+    });
+
+    // Redraw overlay on window resize
+    window.addEventListener('resize', redrawOverlay);
+  </script>
+</body>
+</html>

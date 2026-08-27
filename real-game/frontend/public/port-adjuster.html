@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Port Adjuster - Extreme Pitstop Challenge</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #10b981;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    label {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    select {
+      padding: 8px 12px;
+      background: #0f172a;
+      color: #e5e7eb;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #10b981;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #10b981;
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: #059669;
+    }
+
+    button.secondary {
+      background: #6366f1;
+    }
+
+    button.secondary:hover {
+      background: #4f46e5;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .panel {
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .panel h2 {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #10b981;
+    }
+
+    .image-container {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      margin-bottom: 15px;
+    }
+
+    #scenarioImage {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: 2px solid #475569;
+      border-radius: 4px;
+    }
+
+    #overlayCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      cursor: crosshair;
+    }
+
+    .ports-table {
+      max-height: 700px;
+      overflow-y: auto;
+      background: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 4px;
+    }
+
+    .port-row {
+      display: grid;
+      grid-template-columns: 60px 80px 80px 80px 80px;
+      padding: 10px;
+      border-bottom: 1px solid #475569;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .port-row.header {
+      background: #334155;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+
+    .port-row:hover {
+      background: #1e293b;
+    }
+
+    .port-num {
+      font-weight: 700;
+      color: #10b981;
+    }
+
+    .port-input {
+      width: 100%;
+      padding: 6px;
+      background: #0f172a;
+      color: #e5e7eb;
+      border: 1px solid #475569;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    .port-input:focus {
+      outline: none;
+      border-color: #10b981;
+      background: #1e293b;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .actions button {
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .info-text {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 1200px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 Port Adjuster - Extreme Pitstop Challenge</h1>
+
+    <div class="controls">
+      <label>
+        Scenario:
+        <select id="scenarioSelect">
+          <option value="AP">AP Scenario 1</option>
+          <option value="AP2">AP Scenario 2</option>
+          <option value="AP3">AP Scenario 3</option>
+          <option value="Branch">Branch Scenario 1</option>
+          <option value="Branch2">Branch Scenario 2</option>
+          <option value="Branch3">Branch Scenario 3</option>
+          <option value="DataCenter">DataCenter Scenario 1</option>
+          <option value="DataCenter2">DataCenter Scenario 2</option>
+          <option value="DataCenter3">DataCenter Scenario 3</option>
+          <option value="Firmware">Firmware Scenario 1</option>
+          <option value="Firmware2">Firmware Scenario 2</option>
+          <option value="Firmware3">Firmware Scenario 3</option>
+        </select>
+      </label>
+      <button onclick="loadScenario()">Load Scenario</button>
+      <button class="secondary" onclick="downloadJSON()">Download JSON</button>
+    </div>
+
+    <div class="layout">
+      <div class="panel">
+        <h2>📸 Scenario with Port Overlays</h2>
+        <div class="image-container">
+          <img id="scenarioImage" alt="Scenario image">
+          <canvas id="overlayCanvas"></canvas>
+        </div>
+        <div class="info-text">
+          All 24 ports are highlighted. Edit coordinates on the right to adjust positions.
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>⚙️ Port Coordinates</h2>
+        <div class="ports-table">
+          <div class="port-row header">
+            <div>Port</div>
+            <div>X</div>
+            <div>Y</div>
+            <div colspan="2"></div>
+          </div>
+          <div id="portsContainer"></div>
+        </div>
+        <div class="actions">
+          <button class="secondary" onclick="resetCoordinates()">Reset</button>
+          <button onclick="downloadJSON()">Download JSON</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const scenarioMap = {
+      'AP': 'APScenario1.png',
+      'AP2': 'APScenario2.png',
+      'AP3': 'APScenario3.png',
+      'Branch': 'BranchScenario1.png',
+      'Branch2': 'BranchScenario2.png',
+      'Branch3': 'BranchScenario3.png',
+      'DataCenter': 'DataCenterScenario1.png',
+      'DataCenter2': 'DataCenterScenario2.png',
+      'DataCenter3': 'DataCenterScenario3.png',
+      'Firmware': 'FirmwareScenario1.png',
+      'Firmware2': 'FirmwareScenario2.png',
+      'Firmware3': 'FirmwareScenario3.png',
+    };
+
+    let ports = [];
+    let canvas, ctx;
+    let imageNaturalWidth = 0;
+    let imageNaturalHeight = 0;
+
+    async function loadScenario() {
+      const select = document.getElementById('scenarioSelect');
+      const scenarioKey = select.value;
+      const filename = scenarioMap[scenarioKey];
+
+      const img = document.getElementById('scenarioImage');
+      img.src = `/scenarios/${filename}`;
+
+      img.onload = function() {
+        imageNaturalWidth = img.naturalWidth;
+        imageNaturalHeight = img.naturalHeight;
+
+        canvas = document.getElementById('overlayCanvas');
+        ctx = canvas.getContext('2d');
+        canvas.width = img.offsetWidth;
+        canvas.height = img.offsetHeight;
+
+        // Load default port config
+        fetch('/data/portConfig.json')
+          .then(r => r.json())
+          .then(data => {
+            ports = JSON.parse(JSON.stringify(data));
+            renderPortsTable();
+            drawOverlay();
+          });
+      };
+
+      img.onerror = function() {
+        alert(`Failed to load image: /scenarios/${filename}`);
+      };
+    }
+
+    function renderPortsTable() {
+      const container = document.getElementById('portsContainer');
+      container.innerHTML = ports.map((port, idx) => `
+        <div class="port-row">
+          <div class="port-num">${port.port}</div>
+          <input type="number" class="port-input" data-port="${port.port}" data-field="x" value="${port.x}" onchange="onCoordinateChange()">
+          <input type="number" class="port-input" data-port="${port.port}" data-field="y" value="${port.y}" onchange="onCoordinateChange()">
+          <div style="color: #10b981; text-align: center;">${port.x}, ${port.y}</div>
+        </div>
+      `).join('');
+    }
+
+    function onCoordinateChange() {
+      const inputs = document.querySelectorAll('.port-input');
+      inputs.forEach(input => {
+        const portNum = parseInt(input.dataset.port);
+        const field = input.dataset.field;
+        const port = ports.find(p => p.port === portNum);
+        if (port) {
+          port[field] = parseInt(input.value) || 0;
+        }
+      });
+
+      // Update the display
+      renderPortsTable();
+      drawOverlay();
+    }
+
+    function drawOverlay() {
+      const img = document.getElementById('scenarioImage');
+      if (!canvas) return;
+
+      canvas.width = img.offsetWidth;
+      canvas.height = img.offsetHeight;
+
+      ports.forEach(port => {
+        const x = (port.x / imageNaturalWidth) * canvas.width;
+        const y = (port.y / imageNaturalHeight) * canvas.height;
+        const size = 80 * (canvas.width / imageNaturalWidth);
+
+        // Draw square
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 3;
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.3)';
+        ctx.fillRect(x - size / 2, y - size / 2, size, size);
+        ctx.strokeRect(x - size / 2, y - size / 2, size, size);
+
+        // Draw port number
+        ctx.fillStyle = '#10b981';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(port.port, x, y);
+      });
+    }
+
+    function resetCoordinates() {
+      if (confirm('Reset all coordinates to defaults?')) {
+        location.reload();
+      }
+    }
+
+    function downloadJSON() {
+      if (ports.length === 0) {
+        alert('No ports loaded!');
+        return;
+      }
+
+      const json = JSON.stringify(ports, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'portConfig-adjusted.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Load first scenario on page load
+    window.addEventListener('load', () => {
+      loadScenario();
+    });
+
+    // Redraw on window resize
+    window.addEventListener('resize', drawOverlay);
+  </script>
+</body>
+</html>

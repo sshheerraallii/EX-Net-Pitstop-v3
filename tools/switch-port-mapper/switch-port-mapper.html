@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Switch Port Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 8px;
+        }
+
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 6px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #007bff;
+            background: #f9f9f9;
+        }
+
+        .upload-area.active {
+            border-color: #28a745;
+            background: #f0f8ff;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .image-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            background: #f9f9f9;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #ddd;
+        }
+
+        .image-container img {
+            display: block;
+            width: 100%;
+            height: auto;
+            cursor: crosshair;
+        }
+
+        .port-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .port-led {
+            cursor: pointer;
+            transition: filter 0.2s ease;
+        }
+
+        .port-led:hover {
+            filter: drop-shadow(0 0 8px currentColor) !important;
+        }
+
+        .port-active {
+            fill: #00ff00;
+            animation: flash 0.6s infinite;
+            filter: drop-shadow(0 0 4px #00ff00);
+        }
+
+        .port-inactive {
+            fill: #444;
+            opacity: 0.3;
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background: #f5f5f5;
+            border-color: #999;
+        }
+
+        button.primary {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        button.primary:hover {
+            background: #0056b3;
+        }
+
+        button.danger {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        button.danger:hover {
+            background: #c82333;
+        }
+
+        .port-info {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .port-info p {
+            margin: 8px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .port-info strong {
+            color: #333;
+        }
+
+        .port-list {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 12px;
+            max-height: 250px;
+            overflow-y: auto;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .port-list div {
+            padding: 6px 0;
+            color: #666;
+            border-bottom: 1px solid #eee;
+        }
+
+        .port-list div:last-child {
+            border-bottom: none;
+        }
+
+        .port-list .empty {
+            color: #999;
+            font-style: italic;
+            padding: 12px;
+            text-align: center;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+            background: #f9f9f9;
+        }
+
+        .code-section {
+            margin-bottom: 20px;
+        }
+
+        .code-section label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #1976d2;
+            margin-bottom: 16px;
+        }
+
+        .success-box {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #2e7d32;
+            margin-bottom: 16px;
+        }
+
+        .instruction {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .instruction h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .instruction p {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 Network Switch Port Mapper</h1>
+
+        <div class="instruction">
+            <h3>How to use:</h3>
+            <p><strong>1.</strong> Upload your switch image (the bottom panel showing ports) • <strong>2.</strong> Click on each port LED position • <strong>3.</strong> Copy the generated SVG and HTML code</p>
+        </div>
+
+        <div class="content">
+            <!-- Left Panel: Image Upload and Port Mapping -->
+            <div class="section">
+                <h2>Port Mapper</h2>
+
+                <div class="upload-area" id="uploadArea">
+                    <p style="font-size: 14px; color: #666; margin-bottom: 8px;">
+                        📷 Click to upload or drag switch image here
+                    </p>
+                    <p style="font-size: 12px; color: #999;">PNG, JPG, GIF (recommended: 1280x300px)</p>
+                    <input type="file" id="imageInput" accept="image/*">
+                </div>
+
+                <div class="image-container">
+                    <img id="switchImage" alt="Switch image" style="display: none;">
+                    <svg id="portOverlay" class="port-overlay" style="display: none;"></svg>
+                </div>
+
+                <div class="port-info">
+                    <p><strong>Total Ports:</strong> <span id="portCount">0</span></p>
+                    <p style="margin: 0;"><strong>Status:</strong> <span id="status" style="color: #999;">Waiting for image...</span></p>
+                </div>
+
+                <div class="controls">
+                    <button class="primary" id="downloadCoordinates">📥 Download CSV</button>
+                    <button id="undoBtn" disabled>↶ Undo</button>
+                    <button class="danger" id="clearBtn" disabled>🗑️ Clear All</button>
+                </div>
+
+                <div class="port-list" id="portList">
+                    <div class="empty">No ports mapped</div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Code Generation -->
+            <div class="section">
+                <h2>Generated Code</h2>
+
+                <div class="info-box">
+                    ℹ️ Click ports in the image to generate responsive SVG overlay code
+                </div>
+
+                <div class="code-section">
+                    <label>SVG Overlay (paste into your HTML):</label>
+                    <textarea id="svgOutput" readonly placeholder="SVG will appear here after mapping ports..."></textarea>
+                    <button class="primary" id="copySvgBtn" style="margin-top: 8px; width: 100%;">📋 Copy SVG</button>
+                </div>
+
+                <div class="code-section">
+                    <label>CSS Styles:</label>
+                    <textarea id="cssOutput" readonly></textarea>
+                    <button class="primary" id="copyCssBtn" style="margin-top: 8px; width: 100%;">📋 Copy CSS</button>
+                </div>
+
+                <div class="code-section">
+                    <label>JavaScript (optional):</label>
+                    <textarea id="jsOutput" readonly></textarea>
+                    <button class="primary" id="copyJsBtn" style="margin-top: 8px; width: 100%;">📋 Copy JS</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Complete HTML Example -->
+        <div class="section" style="margin-bottom: 40px;">
+            <h2>Complete HTML Example</h2>
+            <textarea id="completeHtmlOutput" readonly style="height: 300px;"></textarea>
+            <button class="primary" id="copyHtmlBtn" style="margin-top: 8px; width: 100%;">📋 Copy Complete HTML</button>
+        </div>
+    </div>
+
+    <script>
+        let ports = [];
+        let imageNaturalSize = { width: 1280, height: 300 };
+
+        const imageInput = document.getElementById('imageInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const switchImage = document.getElementById('switchImage');
+        const portOverlay = document.getElementById('portOverlay');
+        const portCount = document.getElementById('portCount');
+        const portList = document.getElementById('portList');
+        const status = document.getElementById('status');
+
+        const clearBtn = document.getElementById('clearBtn');
+        const undoBtn = document.getElementById('undoBtn');
+        const downloadCoordinates = document.getElementById('downloadCoordinates');
+
+        const svgOutput = document.getElementById('svgOutput');
+        const cssOutput = document.getElementById('cssOutput');
+        const jsOutput = document.getElementById('jsOutput');
+        const completeHtmlOutput = document.getElementById('completeHtmlOutput');
+
+        const copySvgBtn = document.getElementById('copySvgBtn');
+        const copyCssBtn = document.getElementById('copyCssBtn');
+        const copyJsBtn = document.getElementById('copyJsBtn');
+        const copyHtmlBtn = document.getElementById('copyHtmlBtn');
+
+        // File Upload
+        uploadArea.addEventListener('click', () => imageInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('active');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('active');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('active');
+            if (e.dataTransfer.files.length > 0) {
+                imageInput.files = e.dataTransfer.files;
+                loadImage();
+            }
+        });
+
+        imageInput.addEventListener('change', loadImage);
+
+        function loadImage() {
+            const file = imageInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                switchImage.src = e.target.result;
+                switchImage.onload = () => {
+                    imageNaturalSize = {
+                        width: switchImage.naturalWidth,
+                        height: switchImage.naturalHeight
+                    };
+                    switchImage.style.display = 'block';
+                    portOverlay.style.display = 'block';
+                    uploadArea.style.display = 'none';
+                    ports = [];
+                    updateDisplay();
+                    status.textContent = 'Ready to map ports';
+                    status.style.color = '#28a745';
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        portOverlay.addEventListener('click', (e) => {
+            const rect = switchImage.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const percentX = (x / rect.width) * 100;
+            const percentY = (y / rect.height) * 100;
+
+            ports.push({
+                num: ports.length + 1,
+                x: parseFloat(percentX.toFixed(2)),
+                y: parseFloat(percentY.toFixed(2)),
+                absX: (percentX / 100) * imageNaturalSize.width,
+                absY: (percentY / 100) * imageNaturalSize.height
+            });
+
+            updateDisplay();
+        });
+
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Clear all ports?')) {
+                ports = [];
+                updateDisplay();
+            }
+        });
+
+        undoBtn.addEventListener('click', () => {
+            ports.pop();
+            updateDisplay();
+        });
+
+        downloadCoordinates.addEventListener('click', () => {
+            if (ports.length === 0) {
+                alert('No ports mapped yet');
+                return;
+            }
+            let csv = 'Port #,X%,Y%,AbsoluteX,AbsoluteY\n';
+            ports.forEach(p => {
+                csv += `${p.num},${p.x},${p.y},${Math.round(p.absX)},${Math.round(p.absY)}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'switch-ports.csv';
+            a.click();
+        });
+
+        function updateDisplay() {
+            portCount.textContent = ports.length;
+            clearBtn.disabled = ports.length === 0;
+            undoBtn.disabled = ports.length === 0;
+            downloadCoordinates.disabled = ports.length === 0;
+
+            // Update port list
+            portList.innerHTML = ports.length === 0
+                ? '<div class="empty">No ports mapped</div>'
+                : ports.map(p => `<div>Port ${p.num}: ${p.x}% × ${p.y}% (${Math.round(p.absX)}, ${Math.round(p.absY)})</div>`).join('');
+
+            // Update SVG overlay
+            portOverlay.setAttribute('viewBox', `0 0 ${imageNaturalSize.width} ${imageNaturalSize.height}`);
+            portOverlay.innerHTML = ports.map(p => `
+                <circle cx="${Math.round(p.absX)}" cy="${Math.round(p.absY)}" r="12" class="port-active"/>
+            `).join('');
+
+            generateCode();
+        }
+
+        function generateCode() {
+            if (ports.length === 0) {
+                svgOutput.value = '';
+                cssOutput.value = '';
+                jsOutput.value = '';
+                completeHtmlOutput.value = '';
+                return;
+            }
+
+            // SVG Code
+            const svgCode = `<svg class="port-overlay" viewBox="0 0 ${imageNaturalSize.width} ${imageNaturalSize.height}">
+${ports.map(p => `    <circle cx="${Math.round(p.absX)}" cy="${Math.round(p.absY)}" r="12" class="port-active"/>`).join('\n')}
+</svg>`;
+
+            // CSS Code
+            const cssCode = `.switch-container {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.switch-container img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.port-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.port-led,
+.port-active {
+    filter: drop-shadow(0 0 4px currentColor);
+}
+
+.port-active {
+    fill: #00ff00;
+    animation: flash 0.6s infinite;
+}
+
+@keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}`;
+
+            // JavaScript Code
+            const jsCode = `// Optional: Toggle ports on/off
+const portCircles = document.querySelectorAll('.port-active');
+
+portCircles.forEach((circle, index) => {
+    circle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        circle.classList.toggle('port-inactive');
+        circle.classList.toggle('port-active');
+    });
+
+    // Optional: Add port number label
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', circle.getAttribute('cx'));
+    text.setAttribute('y', circle.getAttribute('cy'));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('dy', '0.3em');
+    text.setAttribute('fill', '#000');
+    text.setAttribute('font-size', '10');
+    text.setAttribute('font-weight', 'bold');
+    text.textContent = index + 1;
+    circle.parentElement.appendChild(text);
+});`;
+
+            // Complete HTML
+            const completeHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Switch Monitor</title>
+    <style>
+        ${cssCode}
+    </style>
+</head>
+<body>
+    <div class="switch-container">
+        <img src="your-switch-image.jpg" alt="Network Switch">
+        ${svgCode}
+    </div>
+
+    <script>
+        ${jsCode}
+    </script>
+</body>
+</html>`;
+
+            svgOutput.value = svgCode;
+            cssOutput.value = cssCode;
+            jsOutput.value = jsCode;
+            completeHtmlOutput.value = completeHtml;
+        }
+
+        // Copy functions
+        function copyToClipboard(textarea, btn) {
+            textarea.select();
+            document.execCommand('copy');
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Copied!';
+            btn.style.background = '#28a745';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '';
+            }, 2000);
+        }
+
+        copySvgBtn.addEventListener('click', () => copyToClipboard(svgOutput, copySvgBtn));
+        copyCssBtn.addEventListener('click', () => copyToClipboard(cssOutput, copyCssBtn));
+        copyJsBtn.addEventListener('click', () => copyToClipboard(jsOutput, copyJsBtn));
+        copyHtmlBtn.addEventListener('click', () => copyToClipboard(completeHtmlOutput, copyHtmlBtn));
+    </script>
+</body>
+</html>

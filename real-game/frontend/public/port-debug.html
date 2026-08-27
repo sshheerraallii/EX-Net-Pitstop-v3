@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Port Debug - Extreme Pitstop Challenge</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #000;
+      color: #e5e7eb;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .main-container {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      height: 100vh;
+      gap: 0;
+    }
+
+    .scenario-display {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .scenario-header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f2a4a 100%);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      border-bottom: 2px solid rgba(124, 58, 237, 0.2);
+      flex-shrink: 0;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      flex: 1;
+    }
+
+    .agent-icon {
+      flex-shrink: 0;
+      width: 60px;
+      height: 60px;
+      object-fit: contain;
+    }
+
+    .header-text {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .agent-text {
+      color: #e5e7eb;
+      font-size: 1.1rem;
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    .required-ports-text {
+      color: #d1d5db;
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    .ports-highlight {
+      color: #fcd34d;
+      font-weight: 700;
+    }
+
+    .scenario-image-container {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .scenario-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+
+    svg.port-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .port-square {
+      filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.4));
+    }
+
+    .port-active {
+      fill: #10b981;
+      opacity: 0.15;
+      animation: portFlash 0.8s infinite;
+    }
+
+    .port-number {
+      fill: #10b981;
+      opacity: 1;
+      font-size: 24px;
+      font-weight: 700;
+      text-anchor: middle;
+      user-select: none;
+      pointer-events: none;
+      animation: numberFlash 0.8s infinite;
+    }
+
+    @keyframes portFlash {
+      0%, 100% { opacity: 0.15; }
+      50% { opacity: 0.6; }
+    }
+
+    @keyframes numberFlash {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .sidebar {
+      background: #1e293b;
+      border-left: 1px solid #475569;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 15px;
+      background: #334155;
+      border-bottom: 1px solid #475569;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header h2 {
+      font-size: 14px;
+      color: #10b981;
+      margin-bottom: 10px;
+    }
+
+    .scenario-selector {
+      display: flex;
+      gap: 5px;
+    }
+
+    .scenario-selector select {
+      flex: 1;
+      padding: 6px;
+      background: #0f172a;
+      color: #e5e7eb;
+      border: 1px solid #475569;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    .scenario-selector button {
+      padding: 6px 10px;
+      background: #10b981;
+      color: #000;
+      border: none;
+      border-radius: 3px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .scenario-selector button:hover {
+      background: #059669;
+    }
+
+    .ports-table-container {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .ports-table {
+      display: grid;
+      grid-template-columns: 50px 60px 60px;
+      gap: 0;
+      padding: 0;
+      font-size: 12px;
+    }
+
+    .ports-table-header {
+      display: contents;
+      font-weight: 600;
+      background: #334155;
+      position: sticky;
+      top: 0;
+    }
+
+    .ports-table-header > div {
+      padding: 8px;
+      background: #334155;
+      border-bottom: 1px solid #475569;
+      border-right: 1px solid #475569;
+    }
+
+    .ports-table-header > div:last-child {
+      border-right: none;
+    }
+
+    .port-row {
+      display: contents;
+    }
+
+    .port-row > div {
+      padding: 6px;
+      border-bottom: 1px solid #475569;
+      border-right: 1px solid #475569;
+      background: #1e293b;
+    }
+
+    .port-row > div:last-child {
+      border-right: none;
+    }
+
+    .port-row:hover > div {
+      background: #334155;
+    }
+
+    .port-num {
+      color: #10b981;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .port-input {
+      width: 100%;
+      padding: 4px;
+      background: #0f172a;
+      color: #e5e7eb;
+      border: 1px solid #475569;
+      border-radius: 2px;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .port-input:focus {
+      outline: none;
+      border-color: #10b981;
+      background: #1e293b;
+    }
+
+    .sidebar-footer {
+      padding: 15px;
+      background: #334155;
+      border-top: 1px solid #475569;
+      flex-shrink: 0;
+      display: flex;
+      gap: 8px;
+    }
+
+    .sidebar-footer button {
+      flex: 1;
+      padding: 8px;
+      background: #10b981;
+      color: #000;
+      border: none;
+      border-radius: 3px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .sidebar-footer button:hover {
+      background: #059669;
+    }
+
+    .sidebar-footer button.secondary {
+      background: #6366f1;
+    }
+
+    .sidebar-footer button.secondary:hover {
+      background: #4f46e5;
+    }
+
+    @media (max-width: 1200px) {
+      .main-container {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="scenario-display">
+      <div class="scenario-header">
+        <div class="header-content">
+          <img src="/scenarios/agent-one-icon.svg" alt="Agent One" class="agent-icon" />
+          <div class="header-text">
+            <p class="agent-text">🔧 Debug Mode - All Ports Visible</p>
+            <p class="required-ports-text">
+              All <span class="ports-highlight">24 ports</span> are flashing - adjust coordinates in real-time →
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="scenario-image-container">
+        <img id="scenarioImage" alt="Scenario image" class="scenario-image" />
+        <svg id="portOverlay" class="port-overlay" viewBox="0 0 4400 2475" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h2>📍 Port Coordinates</h2>
+        <div class="scenario-selector">
+          <select id="scenarioSelect" style="flex: 1;">
+            <option value="AP">AP Scenario 1</option>
+            <option value="AP2">AP Scenario 2</option>
+            <option value="AP3">AP Scenario 3</option>
+            <option value="Branch">Branch Scenario 1</option>
+            <option value="Branch2">Branch Scenario 2</option>
+            <option value="Branch3">Branch Scenario 3</option>
+            <option value="DataCenter">DataCenter Scenario 1</option>
+            <option value="DataCenter2">DataCenter Scenario 2</option>
+            <option value="DataCenter3">DataCenter Scenario 3</option>
+            <option value="Firmware">Firmware Scenario 1</option>
+            <option value="Firmware2">Firmware Scenario 2</option>
+            <option value="Firmware3">Firmware Scenario 3</option>
+          </select>
+          <button onclick="loadScenario()">Load</button>
+        </div>
+      </div>
+
+      <div class="ports-table-container">
+        <div class="ports-table">
+          <div class="ports-table-header">
+            <div>Port</div>
+            <div>X</div>
+            <div>Y</div>
+          </div>
+          <div id="portsContainer"></div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="secondary" onclick="downloadJSON()">📥 Download</button>
+        <button onclick="resetCoordinates()">🔄 Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const scenarioMap = {
+      'AP': 'APScenario1.png',
+      'AP2': 'APScenario2.png',
+      'AP3': 'APScenario3.png',
+      'Branch': 'BranchScenario1.png',
+      'Branch2': 'BranchScenario2.png',
+      'Branch3': 'BranchScenario3.png',
+      'DataCenter': 'DataCenterScenario1.png',
+      'DataCenter2': 'DataCenterScenario2.png',
+      'DataCenter3': 'DataCenterScenario3.png',
+      'Firmware': 'FirmwareScenario1.png',
+      'Firmware2': 'FirmwareScenario2.png',
+      'Firmware3': 'FirmwareScenario3.png',
+    };
+
+    let portConfig = [];
+
+    async function loadScenario() {
+      const select = document.getElementById('scenarioSelect');
+      const scenarioKey = select.value;
+      const filename = scenarioMap[scenarioKey];
+
+      const img = document.getElementById('scenarioImage');
+      img.src = `/scenarios/${filename}`;
+
+      img.onload = function() {
+        renderAllPorts();
+      };
+
+      img.onerror = function() {
+        alert(`Failed to load image: /scenarios/${filename}`);
+      };
+    }
+
+    async function renderAllPorts() {
+      // Fetch port config
+      try {
+        const response = await fetch('/portConfig.json');
+        portConfig = await response.json();
+      } catch (e) {
+        console.error('Failed to load port config:', e);
+        alert('Error loading port config. Check console.');
+        return;
+      }
+
+      renderTable();
+      drawOverlay();
+    }
+
+    function renderTable() {
+      const container = document.getElementById('portsContainer');
+      container.innerHTML = portConfig.map(port => `
+        <div class="port-row">
+          <div class="port-num">${port.port}</div>
+          <input type="number" class="port-input" data-port="${port.port}" data-field="x" value="${port.x}" onchange="onCoordinateChange()" oninput="onCoordinateChange()">
+          <input type="number" class="port-input" data-port="${port.port}" data-field="y" value="${port.y}" onchange="onCoordinateChange()" oninput="onCoordinateChange()">
+        </div>
+      `).join('');
+    }
+
+    function onCoordinateChange() {
+      const inputs = document.querySelectorAll('.port-input');
+      inputs.forEach(input => {
+        const portNum = parseInt(input.dataset.port);
+        const field = input.dataset.field;
+        const port = portConfig.find(p => p.port === portNum);
+        if (port) {
+          port[field] = parseInt(input.value) || 0;
+        }
+      });
+
+      drawOverlay();
+    }
+
+    function drawOverlay() {
+      const svg = document.getElementById('portOverlay');
+      svg.innerHTML = '';
+
+      portConfig.forEach(port => {
+        const x = port.x;
+        const y = port.y;
+        const size = 80;
+
+        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        group.setAttribute('class', 'port-indicator');
+
+        // Port square
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', x - size / 2);
+        rect.setAttribute('y', y - size / 2);
+        rect.setAttribute('width', size);
+        rect.setAttribute('height', size);
+        rect.setAttribute('rx', 8);
+        rect.setAttribute('class', 'port-square port-active');
+
+        // Port number text
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', x);
+        text.setAttribute('y', y);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('dy', '0.35em');
+        text.setAttribute('class', 'port-number');
+        text.textContent = port.port;
+
+        group.appendChild(rect);
+        group.appendChild(text);
+        svg.appendChild(group);
+      });
+    }
+
+    function downloadJSON() {
+      if (portConfig.length === 0) {
+        alert('No ports loaded!');
+        return;
+      }
+
+      const json = JSON.stringify(portConfig, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'portConfig-adjusted.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function resetCoordinates() {
+      if (confirm('Reset all coordinates to defaults?')) {
+        location.reload();
+      }
+    }
+
+    // Load first scenario on page load
+    window.addEventListener('load', () => {
+      loadScenario();
+    });
+  </script>
+</body>
+</html>

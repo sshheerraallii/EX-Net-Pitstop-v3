@@ -1,0 +1,59 @@
+.port-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.port-indicator {
+  cursor: default;
+}
+
+.port-square {
+  filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.4));
+}
+
+.port-active {
+  fill: #10b981;
+  opacity: 0.15;
+  animation: portFlash 0.8s infinite;
+}
+
+.port-number {
+  fill: #10b981;
+  opacity: 1;
+  font-size: 28px;
+  font-weight: 700;
+  text-anchor: middle;
+  user-select: none;
+  pointer-events: none;
+  animation: numberFlash 0.8s infinite;
+}
+
+@keyframes portFlash {
+  0%, 100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes numberFlash {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Ensure the overlay scales properly with responsive images */
+@media (max-width: 768px) {
+  .port-number {
+    font-size: 20px;
+  }
+}
