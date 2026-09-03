@@ -163,7 +163,11 @@ function ScenarioGame({ runId, player, onGameComplete }) {
       )}
 
       {showSuccess && scenarioDetails && (
-        <SuccessModal imagePath={scenarioDetails.success_image} />
+        <SuccessModal
+          messageKey={currentScenarioRun?.id}
+          successMessage={scenarioDetails.success_message}
+          scenarioName={scenarioDetails.name}
+        />
       )}
     </div>
   )

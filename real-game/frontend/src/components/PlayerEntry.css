@@ -4,27 +4,42 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a0a3a 100%);
+  background: var(--bg);
   position: relative;
   overflow: hidden;
 }
 
-.player-entry::before {
-  content: '';
+.video-player {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 20% 50%, rgba(124, 58, 237, 0.1) 0%, transparent 50%);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  filter: blur(7px);
+  transform: scale(1.06); /* hides the blurred edge from object-fit: cover */
+}
+
+/* Multiply-blend brand tint. This footage is near-monochrome (bright
+   linework on black), so the intro screen's indigo->black gradient
+   crushed it to near-invisible - swapped the floor for steel so
+   highlights keep a cool brand glow instead of disappearing. */
+.video-tint {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(160deg, var(--indigo) 0%, var(--steel) 100%);
+  mix-blend-mode: multiply;
+  opacity: 0.45;
   pointer-events: none;
 }
 
 .entry-container {
   position: relative;
-  z-index: 1;
+  z-index: 5;
   width: 100%;
-  max-width: 500px;
+  max-width: 540px;
   margin: 0 auto;
   padding: 40px;
 }
@@ -37,15 +52,12 @@
 .entry-header h1 {
   font-size: 2.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text);
   margin-bottom: 10px;
 }
 
 .entry-header p {
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 1rem;
 }
 
@@ -53,28 +65,30 @@
   display: flex;
   gap: 10px;
   margin-bottom: 40px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface);
   padding: 4px;
   border-radius: 12px;
+  border: 1px solid var(--border);
 }
 
 .mode-btn {
   flex: 1;
-  padding: 12px 16px;
+  padding: 12px 10px;
   border-radius: 8px;
   background: transparent;
-  color: #9ca3af;
-  font-weight: 500;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.8rem;
+  line-height: 1.25;
+  transition: all 0.2s ease;
 }
 
 .mode-btn:hover {
-  color: #f3f4f6;
+  color: var(--text);
 }
 
 .mode-btn.active {
-  background: #7c3aed;
+  background: var(--violet);
   color: #fff;
 }
 
@@ -91,30 +105,32 @@
 }
 
 .form-group label {
-  font-weight: 500;
-  font-size: 0.9rem;
-  color: #d1d5db;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.76rem;
+  color: var(--text-muted);
 }
 
 .form-group input {
   padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  color: #f3f4f6;
+  color: var(--text);
   font-size: 1rem;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .form-group input:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: #7c3aed;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+  background: var(--surface-raised);
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px rgba(117, 25, 249, 0.14);
 }
 
 .form-group input::placeholder {
-  color: #6b7280;
+  color: var(--text-faint);
 }
 
 .form-group input:disabled {
@@ -124,7 +140,7 @@
 
 .error-message {
   padding: 12px 16px;
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--error-soft);
   border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: 8px;
   color: #fca5a5;
@@ -133,13 +149,13 @@
 }
 
 .submit-btn {
-  padding: 14px 24px;
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  padding: 15px 24px;
+  background: var(--violet);
   color: #fff;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1rem;
   border-radius: 8px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -148,9 +164,9 @@
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
+  background: var(--steel);
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 10px 25px rgba(117, 25, 249, 0.3);
 }
 
 .submit-btn:disabled {

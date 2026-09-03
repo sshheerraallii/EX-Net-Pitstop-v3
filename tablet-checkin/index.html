@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Extreme Agent One — Check-In</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="checkin-screen">
+      <div class="checkin-card">
+        <img src="extreme-logo.png" alt="Extreme Networks" class="checkin-logo" />
+
+        <div class="checkin-header">
+          <h1>Agent Check-In</h1>
+          <p>Enter the player's details, then send them to the kiosk.</p>
+        </div>
+
+        <form id="checkinForm" class="checkin-form" autocomplete="off">
+          <div class="form-group">
+            <label for="name">Name *</label>
+            <input id="name" name="name" type="text" placeholder="Player's name" autofocus />
+          </div>
+
+          <div class="form-group">
+            <label for="country">Country</label>
+            <input id="country" name="country" type="text" placeholder="Player's country (optional)" />
+          </div>
+
+          <div id="formMessage" class="form-message" hidden></div>
+
+          <button type="submit" id="submitBtn" class="submit-btn">
+            <span id="submitLabel">Send to Kiosk</span>
+          </button>
+        </form>
+
+        <div id="recentList" class="recent-list" hidden>
+          <div class="recent-title">Sent this session</div>
+          <ul id="recentItems"></ul>
+        </div>
+      </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

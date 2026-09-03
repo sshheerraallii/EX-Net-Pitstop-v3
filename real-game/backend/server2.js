@@ -723,7 +723,7 @@ app.post("/api/player/scan", (req, res) => {
 // -------------------------
 app.post("/api/player/manual", (req, res) => {
   try {
-    const { name, country } = req.body;
+    const { name, country, source } = req.body;
 
     if (!name || !String(name).trim()) {
       return res.status(400).json({
@@ -732,9 +732,18 @@ app.post("/api/player/manual", (req, res) => {
       });
     }
 
+    // "source" lets the caller flag where this entry actually came from -
+    // the kiosk's own manual-entry form still defaults to 'manual', while
+    // the tablet check-in picker passes 'tablet' so admin can tell the two
+    // apart later. Anything else falls back to 'manual' rather than letting
+    // arbitrary values into the column.
+    const allowedSources = ["manual", "tablet"];
+    const resolvedSource = allowedSources.includes(source) ? source : "manual";
+
     const player = createManualPlayer({
       name: String(name).trim(),
       country: country ? String(country).trim() : "",
+      source: resolvedSource,
     });
 
     return res.json({

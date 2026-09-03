@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
+import TabletCheckinPicker from './TabletCheckinPicker'
 import './PlayerEntry.css'
 
 const API_BASE = 'http://localhost:3001/api'
@@ -10,7 +11,7 @@ function PlayerEntry({ onPlayerCreated }) {
   const [qrCode, setQrCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [entryMode, setEntryMode] = useState('manual') // manual or qr
+  const [entryMode, setEntryMode] = useState('manual') // manual, qr, or tablet
 
   const handleManualEntry = async (e) => {
     e.preventDefault()
@@ -61,9 +62,18 @@ function PlayerEntry({ onPlayerCreated }) {
 
   return (
     <div className="player-entry">
+      <video
+        autoPlay
+        loop
+        muted
+        className="video-player"
+        src="http://localhost:3001/loginvideo.mp4"
+      />
+      <div className="video-tint" />
+
       <div className="entry-container">
         <div className="entry-header">
-          <h1>Extreme Pitstop Challenge</h1>
+          <h1>Extreme Agent One</h1>
           <p>Agent One is ready. Let's go!</p>
         </div>
 
@@ -86,9 +96,20 @@ function PlayerEntry({ onPlayerCreated }) {
           >
             QR Code
           </button>
+          <button
+            className={`mode-btn ${entryMode === 'tablet' ? 'active' : ''}`}
+            onClick={() => {
+              setEntryMode('tablet')
+              setError('')
+            }}
+          >
+            Tablet Check-In
+          </button>
         </div>
 
-        {entryMode === 'manual' ? (
+        {entryMode === 'tablet' ? (
+          <TabletCheckinPicker apiBase={API_BASE} onPlayerCreated={onPlayerCreated} />
+        ) : entryMode === 'manual' ? (
           <form onSubmit={handleManualEntry} className="entry-form">
             <div className="form-group">
               <label htmlFor="name">Your Name *</label>

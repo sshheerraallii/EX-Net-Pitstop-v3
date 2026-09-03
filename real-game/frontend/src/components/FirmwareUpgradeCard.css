@@ -1,0 +1,287 @@
+/* Same card language as branch-link-card / switch-panel-card (radial glow +
+   surface + top border), tinted amber instead of red/violet since this is a
+   "staged, awaiting your go-ahead" state rather than a fault. */
+.firmware-card {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 32px 16px;
+  background: radial-gradient(circle at 50% -20%, rgba(251, 191, 36, 0.14) 0%, transparent 60%), var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.firmware-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.firmware-label-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--highlight);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
+  animation: firmwareDotPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes firmwareDotPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.firmware-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 28px;
+  width: 100%;
+  max-width: 900px;
+}
+
+/* package that already "landed" - drops in once, then settles into a
+   gentle idle float so the card doesn't feel static */
+.firmware-package {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.firmware-package-icon-wrap {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  animation: firmwarePackageDrop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    firmwarePackageFloat 3s ease-in-out 0.6s infinite;
+}
+
+.firmware-package-icon {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes firmwarePackageDrop {
+  0% {
+    transform: translateY(-24px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes firmwarePackageFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.firmware-package-check {
+  position: absolute;
+  bottom: -4px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--success);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(23, 178, 106, 0.7);
+  transform: scale(0);
+  animation: firmwareCheckPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.55s both;
+}
+
+@keyframes firmwareCheckPop {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+.firmware-package-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.firmware-package-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.firmware-progress-track {
+  width: 180px;
+  height: 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.firmware-progress-fill {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--highlight) 0px,
+    var(--highlight) 8px,
+    rgba(251, 191, 36, 0.55) 8px,
+    rgba(251, 191, 36, 0.55) 16px
+  );
+  background-size: 200% 100%;
+  animation: firmwareShimmer 1.4s linear infinite;
+}
+
+@keyframes firmwareShimmer {
+  0% { background-position: 0 0; }
+  100% { background-position: -32px 0; }
+}
+
+/* version transition - the pending change, pulsing since it's waiting on
+   the player's action */
+.firmware-version-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.firmware-version-chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.firmware-version-chip.old {
+  color: var(--text-faint);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+}
+
+.firmware-version-chip.new {
+  color: #1a1400;
+  background: var(--highlight);
+  box-shadow: 0 0 0 rgba(251, 191, 36, 0.6);
+  animation: firmwareVersionPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes firmwareVersionPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(251, 191, 36, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(251, 191, 36, 0.75);
+    transform: scale(1.05);
+  }
+}
+
+.firmware-version-arrow {
+  color: var(--highlight);
+  font-size: 1rem;
+  font-weight: 700;
+  animation: firmwareArrowNudge 1.4s ease-in-out infinite;
+}
+
+@keyframes firmwareArrowNudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+
+/* the 3 switches queued for this same upgrade */
+.firmware-switch-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.firmware-switch-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.firmware-switch-icon {
+  width: 46px;
+  height: auto;
+}
+
+.firmware-switch-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.firmware-switch-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--highlight);
+  box-shadow: 0 0 6px rgba(251, 191, 36, 0.8);
+  animation: firmwareDotPulse 1.4s ease-in-out infinite;
+}
+
+.firmware-switch-chip:nth-child(2) .firmware-switch-dot {
+  animation-delay: 0.2s;
+}
+
+.firmware-switch-chip:nth-child(3) .firmware-switch-dot {
+  animation-delay: 0.4s;
+}
+
+.firmware-caption {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .firmware-card {
+    padding: 14px 16px 14px;
+    gap: 10px;
+  }
+
+  .firmware-body {
+    gap: 18px;
+  }
+
+  .firmware-label {
+    font-size: 0.7rem;
+  }
+
+  .firmware-progress-track {
+    width: 130px;
+  }
+
+  .firmware-switch-row {
+    gap: 10px;
+  }
+
+  .firmware-switch-icon {
+    width: 36px;
+  }
+
+  .firmware-caption {
+    font-size: 0.75rem;
+    text-align: center;
+  }
+}

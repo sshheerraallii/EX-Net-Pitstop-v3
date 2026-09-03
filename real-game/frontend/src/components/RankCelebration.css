@@ -1,0 +1,167 @@
+.rank-celebration {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--bg);
+  animation: celebrationFadeIn 0.5s ease-out both;
+}
+
+.rank-celebration--gold {
+  background: radial-gradient(circle at 50% 28%, rgba(251, 191, 36, 0.22) 0%, var(--bg) 65%);
+}
+
+.rank-celebration--silver {
+  background: radial-gradient(circle at 50% 28%, rgba(169, 176, 188, 0.2) 0%, var(--bg) 65%);
+}
+
+.rank-celebration--bronze {
+  background: radial-gradient(circle at 50% 28%, rgba(168, 106, 61, 0.22) 0%, var(--bg) 65%);
+}
+
+@keyframes celebrationFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.confetti-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -20px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation-name: confettiFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(120vh) translateX(var(--drift, 0px)) rotate(540deg);
+    opacity: 0;
+  }
+}
+
+.celebration-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 24px;
+}
+
+.celebration-trophy {
+  width: 130px;
+  height: auto;
+  margin-bottom: 8px;
+  animation: celebrationTrophyDrop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    celebrationTrophyFloat 2.6s ease-in-out 0.6s infinite;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4));
+}
+
+@keyframes celebrationTrophyDrop {
+  0% {
+    transform: translateY(-40px) scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes celebrationTrophyFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.celebration-ordinal {
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  animation: celebrationTextIn 0.5s ease-out 0.25s both;
+}
+
+.rank-celebration--gold .celebration-ordinal { color: #ffd873; }
+.rank-celebration--silver .celebration-ordinal { color: #d7dce3; }
+.rank-celebration--bronze .celebration-ordinal { color: #e2a76f; }
+
+.celebration-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+  animation: celebrationTextIn 0.5s ease-out 0.35s both;
+}
+
+.celebration-time {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  animation: celebrationTextIn 0.5s ease-out 0.45s both;
+}
+
+.celebration-sub {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  animation: celebrationTextIn 0.5s ease-out 0.55s both;
+}
+
+@keyframes celebrationTextIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .celebration-trophy {
+    width: 100px;
+  }
+
+  .celebration-ordinal {
+    font-size: 1.9rem;
+  }
+
+  .celebration-name {
+    font-size: 1.1rem;
+  }
+
+  .celebration-time {
+    font-size: 0.95rem;
+  }
+}

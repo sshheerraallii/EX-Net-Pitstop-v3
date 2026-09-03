@@ -1,0 +1,82 @@
+/* Same card language as branch-link-card, tinted green (success) instead of
+   red/amber - this is the one scenario where nothing is currently wrong. */
+.dc-resilience-card {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 32px 14px;
+  background: radial-gradient(circle at 50% -20%, rgba(23, 178, 106, 0.12) 0%, transparent 60%), var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.dc-resilience-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.dc-resilience-label-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 8px rgba(23, 178, 106, 0.8);
+  animation: dcResilienceDotPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes dcResilienceDotPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.dc-resilience-svg {
+  width: 100%;
+  max-width: 620px;
+  height: auto;
+}
+
+.dc-resilience-caption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.dc-resilience-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--success);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .dc-resilience-card {
+    padding: 12px 16px 12px;
+    gap: 8px;
+  }
+
+  .dc-resilience-label {
+    font-size: 0.7rem;
+  }
+
+  .dc-resilience-caption {
+    font-size: 0.75rem;
+    text-align: center;
+  }
+}

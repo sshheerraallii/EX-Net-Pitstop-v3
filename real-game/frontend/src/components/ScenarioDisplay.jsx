@@ -1,70 +1,88 @@
-import { useState, useRef, useEffect } from 'react'
 import './ScenarioDisplay.css'
-import PortOverlay from './PortOverlay'
+import SwitchChassis from './SwitchChassis'
+import AgentChatBubble from './AgentChatBubble'
+import BranchLinkMap from './BranchLinkMap'
+import FirmwareUpgradeCard from './FirmwareUpgradeCard'
+import APRebootCard from './APRebootCard'
+import DataCenterResilienceCard from './DataCenterResilienceCard'
+
+function taskCopy(scenario) {
+  if (scenario.name.includes('AP')) return 'reboot the Access Points'
+  if (scenario.name.includes('Branch')) return 'bring the branch back online'
+  if (scenario.name.includes('DataCenter')) return 'celebrate the resiliency of Extreme Fabric Connect'
+  return 'upgrade the Firmware'
+}
 
 function ScenarioDisplay({ scenario, progress, requiredPorts }) {
   const imageUrl = `/scenarios/${scenario.background_image}`
-  const imageRef = useRef(null)
-  const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 })
-
-  useEffect(() => {
-    const image = imageRef.current
-    if (!image) return
-
-    // ResizeObserver to track image size changes (zoom, window resize, etc.)
-    const resizeObserver = new ResizeObserver(() => {
-      if (image.naturalWidth && image.naturalHeight) {
-        // Use natural (actual) image dimensions
-        setImageDimensions({
-          width: image.naturalWidth,
-          height: image.naturalHeight,
-        })
-      }
-    })
-
-    resizeObserver.observe(image)
-
-    // Also set initial dimensions once image loads
-    if (image.naturalWidth) {
-      setImageDimensions({
-        width: image.naturalWidth,
-        height: image.naturalHeight,
-      })
-    }
-
-    return () => resizeObserver.disconnect()
-  }, [])
 
   return (
     <div className="scenario-display">
-      <div className="scenario-header">
-        <div className="header-content">
-          <img src="/scenarios/agent-one-icon.svg" alt="Agent One" className="agent-icon" />
-          <div className="header-text">
-            <p className="agent-text">{scenario.agent_message}</p>
-            <p className="required-ports-text">
-              Plug in ports <span className="ports-highlight">{requiredPorts.join(', ')}</span> to {scenario.name.includes('AP') ? 'upgrade the Access Points' : scenario.name.includes('Branch') ? 'bring the branch back online' : scenario.name.includes('DataCenter') ? 'restore the data center connection' : 'upgrade the Firmware'}
-            </p>
-          </div>
-        </div>
-        <div className="progress-indicator">
-          <span className="progress-label">Scenario {progress.current}/{progress.total}</span>
-        </div>
+      <div className="progress-badge">
+        <span className="progress-label">Scenario {progress.current}/{progress.total}</span>
       </div>
 
-      <div className="scenario-image-container">
-        <img
-          ref={imageRef}
-          src={imageUrl}
-          alt={scenario.name}
-          className="scenario-image"
-          onError={(e) => {
-            e.target.style.display = 'none'
-            e.target.parentElement.innerHTML =
-              '<div class="image-placeholder">Scenario image not loaded</div>'
-          }}
-        />
-        <PortOverlay requiredPorts={requiredPorts} imageDimensions={imageDimensions} />
+      <div className="scenario-body">
+        <div className="scenario-image-container">
+          <img
+            src={imageUrl}
+            alt={scenario.name}
+            className="scenario-image"
+            onError={(e) => {
+              e.target.style.display = 'none'
+              e.target.parentElement.innerHTML =
+                '<div class="image-placeholder">Scenario image not loaded</div>'
+            }}
+          />
+
+          {/* Anchored to the photo area specifically (not the whole screen)
+              so the popup can never drift over the switch panel below and
+              cover the exact ports the player needs to read. */}
+          <AgentChatBubble
+            messageKey={scenario.id}
+            message={scenario.agent_message}
+            taskText={
+              <>
+                Plug in ports <b>{requiredPorts.join(', ')}</b> to {taskCopy(scenario)}
+              </>
+            }
+          />
+        </div>
+
+        {/* Only renders for AP scenarios - turns "4x Access Points have gone
+            offline, let's give them a reboot" into a live status readout:
+            4 units mid-reboot-cycle instead of leaving it as text alone. */}
+        {scenario.category === 'AP' && <APRebootCard message={scenario.agent_message} />}
+
+        {/* Only renders for Branch scenarios - turns the "offline branch /
+            staged failover" narration into an actual broken-link diagram
+            instead of leaving it as text alone. Parses city names straight
+            out of the scenario's own message, so it's correct for all 3
+            Branch variants. */}
+        {scenario.category === 'Branch' && <BranchLinkMap message={scenario.agent_message} />}
+
+        {/* Only renders for DataCenter scenarios - the odd one out: nothing
+            is currently broken here, the cable break already auto-failed-over
+            with zero disruption, so unlike Branch this shows both racks
+            online and a live (not staged) backup path already carrying
+            traffic. */}
+        {scenario.category === 'DataCenter' && <DataCenterResilienceCard />}
+
+        {/* Only renders for Firmware scenarios - Firmware's story is a
+            software-staging one (package downloaded, staged, waiting on
+            approval), not a geography one, so it gets a CSS/HTML animation
+            instead of an SVG diagram: a package drop-in, a shimmering
+            "staged" progress bar, a pulsing version chip, and all 3
+            switches shown queued for the same upgrade. */}
+        {scenario.category === 'Firmware' && <FirmwareUpgradeCard message={scenario.agent_message} />}
+
+        <div className="switch-panel-card">
+          <div className="switch-panel-label">
+            <span className="switch-panel-dot"></span>
+            Network Switch &mdash; Live Port Status
+          </div>
+          <SwitchChassis requiredPorts={requiredPorts} />
+        </div>
 
         <div className="waiting-message">
           <div className="spinner"></div>

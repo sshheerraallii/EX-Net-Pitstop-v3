@@ -214,13 +214,13 @@ function clearLeaderboardDisplay() {
 // -------------------------
 // PLAYER HELPERS
 // -------------------------
-function createManualPlayer({ name, country }) {
+function createManualPlayer({ name, country, source = "manual" }) {
   const stmt = db.prepare(`
     INSERT INTO players (name, country, source)
-    VALUES (?, ?, 'manual')
+    VALUES (?, ?, ?)
   `);
 
-  const info = stmt.run(name, country || null);
+  const info = stmt.run(name, country || null, source);
 
   return db
     .prepare(`SELECT * FROM players WHERE id = ?`)

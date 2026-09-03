@@ -1,0 +1,230 @@
+:root {
+  --indigo: #20004c;
+  --purple: #5b059c;
+  --violet: #7519f9;
+  --steel: #7d76f2;
+  --bg: #000000;
+  --surface: #0c0a12;
+  --surface-raised: #14101f;
+  --border: rgba(125, 118, 242, 0.16);
+  --border-strong: rgba(125, 118, 242, 0.32);
+  --text: #f5f3fa;
+  --text-muted: #a79fc4;
+  --text-faint: #6b6485;
+  --success: #17b26a;
+  --success-soft: rgba(23, 178, 106, 0.12);
+  --error: #ef4444;
+  --error-soft: rgba(239, 68, 68, 0.12);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: radial-gradient(120% 100% at 50% 0%, var(--indigo) 0%, var(--bg) 70%);
+  color: var(--text);
+  font-size: 18px;
+  min-height: 100vh;
+}
+
+.checkin-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.checkin-card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px 36px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+}
+
+.checkin-logo {
+  display: block;
+  height: 40px;
+  margin: 0 auto 28px;
+  opacity: 0.92;
+}
+
+.checkin-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.checkin-header h1 {
+  font-size: 1.9rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.checkin-header p {
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+.checkin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-group label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.form-group input {
+  padding: 18px 18px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 1.15rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: 0 0 0 4px rgba(117, 25, 249, 0.16);
+}
+
+.form-group input::placeholder {
+  color: var(--text-faint);
+}
+
+.form-message {
+  padding: 14px 16px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.form-message.error {
+  background: var(--error-soft);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.form-message.success {
+  background: var(--success-soft);
+  border: 1px solid rgba(23, 178, 106, 0.3);
+  color: #7ee2af;
+}
+
+.submit-btn {
+  padding: 20px 24px;
+  background: var(--violet);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.1rem;
+  font-family: inherit;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: var(--steel);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(117, 25, 249, 0.3);
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.recent-list {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.recent-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.76rem;
+  color: var(--text-faint);
+  margin-bottom: 14px;
+}
+
+.recent-list ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recent-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.92rem;
+  animation: recentIn 0.3s ease-out;
+}
+
+.recent-check {
+  color: var(--success);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.recent-name {
+  flex: 1;
+  color: var(--text);
+}
+
+.recent-country {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.recent-time {
+  color: var(--text-faint);
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+@keyframes recentIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -3,7 +3,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #000;
+  background: var(--bg);
   position: relative;
   overflow: hidden;
 }
@@ -17,7 +17,7 @@
   width: 50px;
   height: 50px;
   border: 4px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #7c3aed;
+  border-top-color: var(--violet);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 20px;
@@ -28,8 +28,8 @@
   top: 0;
   left: 0;
   right: 0;
-  background: rgba(239, 68, 68, 0.15);
-  border-bottom: 2px solid #ef4444;
+  background: var(--error-soft);
+  border-bottom: 2px solid var(--error);
   color: #fca5a5;
   padding: 16px 24px;
   text-align: center;

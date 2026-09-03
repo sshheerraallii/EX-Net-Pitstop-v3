@@ -1,15 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
 
 :root {
-  --primary-purple: #7c3aed;
-  --primary-dark: #2d1b69;
-  --success-green: #10b981;
-  --error-red: #ef4444;
-  --warning-yellow: #fcd34d;
-  --text-light: #f3f4f6;
-  --text-muted: #9ca3af;
-  --bg-dark: #000;
-  --bg-darker: #0a0a0a;
+  /* Extreme Networks brand palette (Brand Guidelines 2025) */
+  --indigo: #20004c;       /* base */
+  --purple: #5b059c;       /* base */
+  --violet: #7519f9;       /* primary accent - use sparingly, never as a wash */
+  --steel: #7d76f2;        /* secondary accent */
+  --ink: #000000;          /* base */
+  --paper: #ffffff;        /* base */
+
+  /* Derived surfaces / text - kept in the base black/white family per guide */
+  --bg: #000000;
+  --surface: #0c0a12;
+  --surface-raised: #14101f;
+  --border: rgba(125, 118, 242, 0.16);
+  --border-strong: rgba(125, 118, 242, 0.32);
+  --text: #f5f3fa;
+  --text-muted: #a79fc4;
+  --text-faint: #6b6485;
+
+  /* Semantic (status), intentionally distinct from the brand hue */
+  --success: #17b26a;
+  --success-soft: rgba(23, 178, 106, 0.12);
+  --error: #ef4444;
+  --error-soft: rgba(239, 68, 68, 0.12);
+  --highlight: #fbbf24;
 }
 
 * {
@@ -25,19 +40,32 @@ html, body {
 
 body {
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--bg-dark);
-  color: var(--text-light);
+  background: var(--bg);
+  color: var(--text);
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Brand type roles: bold headlines, regular body, bold all-caps overline labels */
+h1, h2, h3 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.overline {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+}
+
 button {
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   cursor: pointer;
   border: none;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 input, textarea, select {
@@ -107,4 +135,12 @@ input, textarea, select {
 
 .flash {
   animation: flash 0.6s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

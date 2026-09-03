@@ -1,0 +1,147 @@
+.tablet-checkin-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tcp-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 2px 4px;
+}
+
+.tcp-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  flex-shrink: 0;
+}
+
+.tcp-live-dot.live {
+  background: var(--success);
+  animation: tcpPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes tcpPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(23, 178, 106, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(23, 178, 106, 0);
+  }
+}
+
+.tcp-header-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.tcp-error {
+  padding: 12px 16px;
+  background: var(--error-soft);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 0.9rem;
+}
+
+.tcp-empty {
+  padding: 32px 20px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: 12px;
+  color: var(--text-muted);
+}
+
+.tcp-empty p {
+  margin: 0;
+}
+
+.tcp-empty-sub {
+  margin-top: 6px !important;
+  font-size: 0.85rem;
+  color: var(--text-faint);
+}
+
+.tcp-setup {
+  border-style: solid;
+}
+
+.tcp-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.tcp-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.tcp-item:hover:not(:disabled) {
+  border-color: var(--violet);
+  background: var(--surface-raised);
+  transform: translateY(-1px);
+}
+
+.tcp-item:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.tcp-item:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tcp-item-main {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.tcp-item-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tcp-item-country {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.tcp-item-meta {
+  flex-shrink: 0;
+  color: var(--text-faint);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.tcp-spin {
+  display: inline-block;
+  color: var(--violet);
+  animation: spin 1s linear infinite;
+}
