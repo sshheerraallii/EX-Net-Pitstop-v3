@@ -90,7 +90,7 @@ function ScenarioDisplay({ scenario, progress, requiredPorts, pluggedPorts }) {
             <span className="switch-panel-dot"></span>
             Network Switch &mdash; Live Port Status
           </div>
-          <SwitchChassis requiredPorts={requiredPorts} />
+          <SwitchChassis requiredPorts={requiredPorts} pluggedPorts={pluggedPorts || []} />
         </div>
 
         <div className="waiting-message">

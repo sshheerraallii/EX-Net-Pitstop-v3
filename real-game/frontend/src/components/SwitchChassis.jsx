@@ -50,7 +50,12 @@ function buildVentDots() {
 
 const VENT_DOTS = buildVentDots()
 
-function Port({ port, x, y, active }) {
+// `active` = this port is one the scenario asks for. `plugged` = the cable is
+// physically in. A required port blinks to draw the eye; once it's plugged the
+// blinking stops and it goes solid, so the player can see at a glance which of
+// the requested ports they still have left to do.
+function Port({ port, x, y, active, plugged }) {
+  const pending = active && !plugged
   const labelY = y === ROW0_Y ? y - 6 : y + PORT_H + 13
   const pinAreaX = x + 7
   const pinW = (PORT_W - 14) / 8
@@ -71,10 +76,15 @@ function Port({ port, x, y, active }) {
           rx="5"
           fill="none"
           stroke="var(--success)"
-          strokeWidth="2"
+          strokeWidth={plugged ? 2.5 : 2}
+          opacity={plugged ? 1 : undefined}
         >
-          <animate attributeName="opacity" values="0.4;1;0.4" dur="0.8s" repeatCount="indefinite" />
-          <animate attributeName="stroke-width" values="1.5;3;1.5" dur="0.8s" repeatCount="indefinite" />
+          {pending && (
+            <>
+              <animate attributeName="opacity" values="0.4;1;0.4" dur="0.8s" repeatCount="indefinite" />
+              <animate attributeName="stroke-width" values="1.5;3;1.5" dur="0.8s" repeatCount="indefinite" />
+            </>
+          )}
         </rect>
       )}
       <rect
@@ -110,7 +120,7 @@ function Port({ port, x, y, active }) {
       ))}
       <rect x={x + PORT_W / 2 - 4} y={y + PORT_H - 1} width="8" height="3" rx="1" fill="#0a0b0e" />
       <circle cx={x + PORT_W - 5} cy={y + 4} r={active ? 2.6 : 2.1} fill={active ? 'var(--success)' : '#3a3f4a'}>
-        {active && <animate attributeName="opacity" values="1;0.3;1" dur="0.8s" repeatCount="indefinite" />}
+        {pending && <animate attributeName="opacity" values="1;0.3;1" dur="0.8s" repeatCount="indefinite" />}
       </circle>
       <text
         x={x + PORT_W / 2}
@@ -121,13 +131,37 @@ function Port({ port, x, y, active }) {
         fill={active ? 'var(--success)' : 'rgba(255,255,255,0.32)'}
       >
         {port}
-        {active && <animate attributeName="opacity" values="1;0.4;1" dur="0.8s" repeatCount="indefinite" />}
+        {pending && <animate attributeName="opacity" values="1;0.4;1" dur="0.8s" repeatCount="indefinite" />}
       </text>
+
+      {/* Seated-cable marker: a latch bar across the port mouth plus a tick above
+          the number. Reads as "done" without an emoji or a color-only cue. */}
+      {plugged && (
+        <>
+          <rect
+            x={x + 2}
+            y={y + PORT_H / 2 - 1.5}
+            width={PORT_W - 4}
+            height="3"
+            rx="1.5"
+            fill="var(--success)"
+            fillOpacity="0.9"
+          />
+          <polyline
+            points={`${x + PORT_W / 2 - 6},${labelY - 12} ${x + PORT_W / 2 - 2},${labelY - 8} ${x + PORT_W / 2 + 6},${labelY - 18}`}
+            fill="none"
+            stroke="var(--success)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </>
+      )}
     </g>
   )
 }
 
-function SwitchChassis({ requiredPorts = [] }) {
+function SwitchChassis({ requiredPorts = [], pluggedPorts = [] }) {
   const isRequired = (port) => requiredPorts.includes(port)
   const rightX = BLOCK2_X + BLOCK_WIDTH + 40
   const mgmtX = rightX + 78
@@ -209,7 +243,14 @@ function SwitchChassis({ requiredPorts = [] }) {
       </g>
 
       {PORT_LAYOUT.map((p) => (
-        <Port key={p.port} port={p.port} x={p.x} y={p.y} active={isRequired(p.port)} />
+        <Port
+          key={p.port}
+          port={p.port}
+          x={p.x}
+          y={p.y}
+          active={isRequired(p.port)}
+          plugged={pluggedPorts.includes(p.port)}
+        />
       ))}
 
       {/* SFP+ uplinks 25-28 */}
