@@ -1,5 +1,6 @@
 import './SuccessModal.css'
 import AgentChatBubble from './AgentChatBubble'
+import { backendUrl } from '../config'
 
 // Each category gets its own success video (different source footage, so
 // different colors/tinting) instead of one shared clip. Named to match the
@@ -29,7 +30,7 @@ function SuccessModal({ successMessage, messageKey, scenarioName }) {
         loop
         muted
         className="success-video"
-        src={`http://localhost:3001/${videoSrc}`}
+        src={backendUrl(`/${videoSrc}`)}
       />
       <div className={`success-video-tint success-video-tint--${category}`}></div>
 

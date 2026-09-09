@@ -2,9 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import ScenarioDisplay from './ScenarioDisplay'
 import SuccessModal from './SuccessModal'
+import { API_BASE } from '../config'
 import './ScenarioGame.css'
-
-const API_BASE = 'http://localhost:3001/api'
 
 // How often the kiosk asks the backend for live switch port state.
 const POLL_INTERVAL_MS = 500
@@ -102,8 +101,9 @@ function ScenarioGame({ runId, player, onGameComplete }) {
   }
 
   // Tell the backend which ports this scenario targets, then watch live switch state.
-  // The scenario resolves once the player has plugged in as many ports as required —
-  // right or wrong. The backend applies the flat penalty when they're wrong.
+  // The scenario only resolves once the CORRECT ports are in (every required port
+  // up, no wrong port still plugged). Wrong ports along the way never fail or skip
+  // the scenario - the backend just adds a silent flat penalty to the run time.
   useEffect(() => {
     if (!scenarioDetails || !currentScenarioRun) return
 
@@ -141,12 +141,15 @@ function ScenarioGame({ runId, player, onGameComplete }) {
             return
           }
 
-          if (data.countComplete) {
+          if (data.correctComplete) {
             stablePollsRef.current += 1
 
             if (stablePollsRef.current >= STABLE_POLLS_REQUIRED) {
               submittingRef.current = true
-              submitScenario(data.newlyPluggedPorts || [])
+              submitScenario(
+                data.newlyPluggedPorts || [],
+                (data.wrongPortsSeen || []).length
+              )
             }
           } else {
             stablePollsRef.current = 0
@@ -170,7 +173,7 @@ function ScenarioGame({ runId, player, onGameComplete }) {
     }
   }, [currentScenarioRun?.id, scenarioDetails?.id])
 
-  const submitScenario = async (pluggedPorts) => {
+  const submitScenario = async (pluggedPorts, wrongPortCount = 0) => {
     if (!currentScenarioRun || !scenarioDetails) return
 
     const timeMs = Date.now() - scenarioStartTime
@@ -181,6 +184,7 @@ function ScenarioGame({ runId, player, onGameComplete }) {
         run_id: runId,
         plugged_ports: pluggedPorts,
         time_ms: timeMs,
+        wrong_port_count: wrongPortCount,
       })
 
       setAllScenarioRuns((prev) => {

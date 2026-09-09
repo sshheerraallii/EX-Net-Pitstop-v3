@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import axios from 'axios'
 import TabletCheckinPicker from './TabletCheckinPicker'
+import { API_BASE, backendUrl } from '../config'
 import './PlayerEntry.css'
-
-const API_BASE = 'http://localhost:3001/api'
 
 function PlayerEntry({ onPlayerCreated }) {
   const [name, setName] = useState('')
@@ -67,7 +66,7 @@ function PlayerEntry({ onPlayerCreated }) {
         loop
         muted
         className="video-player"
-        src="http://localhost:3001/loginvideo.mp4"
+        src={backendUrl('/loginvideo.mp4')}
       />
       <div className="video-tint" />
 

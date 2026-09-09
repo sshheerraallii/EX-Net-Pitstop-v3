@@ -1,0 +1,65 @@
+{
+  "name": "extreme-agent-one-desktop",
+  "productName": "Extreme Agent One",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Kiosk shell for the Extreme Agent One game + spectator leaderboard. Runs the Node backend and shows the app full-screen.",
+  "author": "Extreme Networks",
+  "main": "main.js",
+  "scripts": {
+    "dev": "electron .",
+    "prepare-payload": "node scripts/prepare.mjs",
+    "predist": "npm run prepare-payload",
+    "dist": "electron-builder --win --x64",
+    "clean": "node -e \"require('fs').rmSync('build-staging',{recursive:true,force:true});require('fs').rmSync('release',{recursive:true,force:true})\""
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^3.7.1",
+    "electron": "^34.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.extremenetworks.agentone.kiosk",
+    "productName": "Extreme Agent One",
+    "artifactName": "Extreme-Agent-One-Setup-${version}.${ext}",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "build-staging/backend",
+        "to": "backend"
+      },
+      {
+        "from": "../frontend/dist",
+        "to": "frontend/dist"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Extreme Agent One",
+      "include": "installer/installer.nsh"
+    }
+  }
+}

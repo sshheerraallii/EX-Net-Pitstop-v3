@@ -14,9 +14,54 @@
 }
 
 .result-container {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 900px;
   animation: slideUp 0.4s ease-out;
+}
+
+/* The Extreme wordmark as an actual background layer for the screen - a
+   large, full-bleed, heavily diffused shape sitting behind the ambient
+   gradients, not a crisp watermark stamped over the content. */
+.result-bg-logo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.result-bg-logo img {
+  width: min(140vw, 1500px);
+  max-width: none;
+  height: auto;
+  opacity: 0.05;
+  filter: blur(1.5px) drop-shadow(0 0 70px rgba(117, 25, 249, 0.3));
+  animation: resultLogoPulse 7s ease-in-out infinite;
+}
+
+@keyframes resultLogoPulse {
+  0%, 100% {
+    opacity: 0.04;
+    transform: scale(1);
+    filter: blur(1.5px) drop-shadow(0 0 60px rgba(117, 25, 249, 0.25));
+  }
+  50% {
+    opacity: 0.075;
+    transform: scale(1.02);
+    filter: blur(1.5px) drop-shadow(0 0 110px rgba(125, 118, 242, 0.45));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result-bg-logo img {
+    animation: none;
+    opacity: 0.055;
+  }
 }
 
 .result-header {
@@ -355,22 +400,9 @@
   transform: translateY(0);
 }
 
-.result-logo {
-  position: absolute;
-  right: 28px;
-  bottom: 20px;
-  z-index: 5;
-  width: clamp(110px, 11vw, 170px);
-  height: auto;
-  opacity: 0.85;
-  pointer-events: none;
-}
-
 @media (max-width: 768px) {
-  .result-logo {
-    width: clamp(80px, 22vw, 120px);
-    right: 14px;
-    bottom: 10px;
+  .result-bg-logo img {
+    width: 88vw;
   }
 
   .result-content {

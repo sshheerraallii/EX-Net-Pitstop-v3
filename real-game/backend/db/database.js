@@ -1,9 +1,17 @@
 //databse.js
 
+const fs = require("fs");
 const path = require("path");
 const Database = require("better-sqlite3");
 
-const dbPath = path.join(__dirname, "pitstop.db");
+// The DB lives next to this file in dev. In the packaged desktop build the
+// app code is read-only (Program Files), so the Electron shell points
+// PITSTOP_DATA_DIR at a writable per-user folder and the DB (plus its WAL
+// files) is created there instead.
+const dataDir = process.env.PITSTOP_DATA_DIR || __dirname;
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+
+const dbPath = path.join(dataDir, "pitstop.db");
 const db = new Database(dbPath);
 
 db.pragma("journal_mode = WAL");

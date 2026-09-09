@@ -238,7 +238,16 @@ function SwitchChassis({ requiredPorts = [], pluggedPorts = [] }) {
         <circle cx="55" cy="78" r="26" fill="#0d0a18" fillOpacity="0.5" />
         <circle cx="55" cy="78" r="26" fill="none" stroke="#ffffff" strokeOpacity="0.15" strokeWidth="1.5" />
         <circle cx="55" cy="78" r="17" fill="#ffffff" />
-        <text x="55" y="86" textAnchor="middle" fontWeight="800" fontSize="20" fill="#20004c">E</text>
+        {/* Extreme brand "E" mark - outline traced pixel-for-pixel from the
+            Extreme Networks logo (public/extreme-logo.png, 51x55 source),
+            recoloured to the indigo badge treatment. Two shapes: the main
+            body (top bar + spine + bottom bar, with the signature 45-degree
+            cut on the lower-left corner) and the detached floating middle
+            bar that never touches the spine - the distinctive Extreme "E". */}
+        <svg x="45" y="67" width="20" height="22" viewBox="0 0 51 55" overflow="visible">
+          <path fill="#20004c" d="M0,0 H51 V12 H12 V34 L3,42 H51 V55 H11 L0,44 Z" />
+          <rect fill="#20004c" x="22" y="22" width="22" height="12" />
+        </svg>
         <text x="55" y="118" textAnchor="middle" fontWeight="700" fontSize="9" letterSpacing="1" fill="#ffffff" fillOpacity="0.55">5420-24P</text>
       </g>
 

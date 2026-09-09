@@ -593,9 +593,13 @@ function completeRun(runId, timeMs) {
     };
   }
 
+  // Fold any silent wrong-port penalties accrued during the run into the final
+  // time, so the leaderboard (which sorts on time_ms) actually reflects them.
+  // penalty_ms only ever grows via updateRunWithPenalty and completeRun runs
+  // once per run, so this can't double-count.
   db.prepare(`
     UPDATE runs
-    SET time_ms = ?, completed = 1
+    SET time_ms = ? + penalty_ms, completed = 1
     WHERE id = ?
   `).run(timeMs, runId);
 

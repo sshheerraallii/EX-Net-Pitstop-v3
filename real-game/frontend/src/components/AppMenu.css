@@ -1,0 +1,173 @@
+/* Sits above everything, top-right, small and quiet. */
+.app-menu {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2000;
+  width: 34px;
+}
+
+.app-menu-trigger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid rgba(125, 118, 242, 0.18);
+  background: rgba(12, 10, 18, 0.55);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.app-menu-trigger:hover,
+.app-menu.is-open .app-menu-trigger {
+  opacity: 1;
+  border-color: rgba(125, 118, 242, 0.4);
+  background: rgba(20, 16, 31, 0.9);
+}
+
+.app-menu-trigger span {
+  width: 15px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--text-muted);
+  transition: background 0.18s ease;
+}
+
+.app-menu-trigger:hover span,
+.app-menu.is-open .app-menu-trigger span {
+  background: var(--text);
+}
+
+.app-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 210px;
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+  background-color: #14101f;
+  background-image: linear-gradient(165deg, var(--surface-raised) 0%, #0c0a12 100%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(117, 25, 249, 0.08);
+  animation: appMenuIn 0.16s ease-out;
+}
+
+@keyframes appMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.app-menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.app-menu-item:hover {
+  background: rgba(125, 118, 242, 0.12);
+}
+
+.app-menu-item:disabled {
+  color: var(--text-faint);
+  cursor: default;
+  background: transparent;
+}
+
+.app-menu-item--danger {
+  color: #f2a3a3;
+}
+
+.app-menu-item--danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+}
+
+.app-menu-sep {
+  height: 1px;
+  margin: 6px 8px;
+  background: var(--border-strong);
+}
+
+.app-menu-confirm {
+  padding: 10px 12px;
+}
+
+.app-menu-confirm p {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.app-menu-confirm-row {
+  display: flex;
+  gap: 8px;
+}
+
+.app-menu-btn {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.app-menu-btn:hover {
+  background: rgba(125, 118, 242, 0.12);
+}
+
+.app-menu-btn--danger {
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+}
+
+.app-menu-btn--danger:hover {
+  background: rgba(239, 68, 68, 0.16);
+}
+
+.app-menu-status {
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.app-menu-status--ok {
+  color: var(--success);
+}
+
+.app-menu-status--err {
+  color: #fca5a5;
+}
+
+@media (max-width: 768px) {
+  .app-menu {
+    top: 12px;
+    right: 12px;
+  }
+}

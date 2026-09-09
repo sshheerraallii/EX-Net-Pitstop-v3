@@ -5,272 +5,258 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
+  /* Near-black canvas with a faint cool cast, like the Agent One landing. */
+  background:
+    radial-gradient(1200px 700px at 50% 18%, #16131f 0%, transparent 60%),
+    #050409;
   overflow: hidden;
 }
 
-/* Everything centered on screen - Agent One signal + countdown - lives in
-   one flex stack so they space themselves out and can never overlap,
-   regardless of screen height. */
-.intro-stack {
-  position: relative;
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 56px;
+/* Admin intro video, if present - pushed right back: heavily blurred, dim,
+   just texture behind the composition. */
+.intro-bg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  filter: blur(16px) saturate(0.7);
+  transform: scale(1.12);
+  opacity: 0.22;
 }
 
-/* Agent One signal reveal - replaces the old stock video */
-.agent-signal {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
+.intro-bg-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(160deg, var(--indigo) 0%, #000 100%);
+  mix-blend-mode: multiply;
+  opacity: 0.7;
+  pointer-events: none;
 }
 
-.agent-signal-rings {
-  width: 180px;
-  height: 180px;
-  overflow: visible;
+/* Soft violet / magenta ambient - two large radial washes that drift very
+   slowly. Movement, not blinking. */
+.intro-ambient {
+  position: absolute;
+  inset: -20%;
+  z-index: 3;
+  background:
+    radial-gradient(38% 42% at 32% 30%, rgba(117, 25, 249, 0.28), transparent 70%),
+    radial-gradient(42% 46% at 72% 68%, rgba(244, 39, 200, 0.2), transparent 72%);
+  filter: blur(30px);
+  pointer-events: none;
+  animation: introAmbientDrift 24s ease-in-out infinite alternate;
 }
 
-.signal-ring {
-  fill: none;
-  stroke: var(--violet);
-  stroke-width: 2;
-  transform-origin: 100px 100px;
-  animation: signalPing 2.4s cubic-bezier(0.25, 0.6, 0.4, 1) infinite;
-}
-
-.signal-ring.ring-2 {
-  stroke: var(--steel);
-  animation-delay: 0.8s;
-}
-
-.signal-ring.ring-3 {
-  animation-delay: 1.6s;
-}
-
-@keyframes signalPing {
+@keyframes introAmbientDrift {
   0% {
-    transform: scale(0.35);
-    opacity: 0;
-  }
-  18% {
-    opacity: 0.85;
+    transform: translate3d(-1.5%, -1%, 0) scale(1);
   }
   100% {
-    transform: scale(1.65);
-    opacity: 0;
+    transform: translate3d(2%, 1.5%, 0) scale(1.06);
   }
 }
 
-.signal-node {
-  fill: var(--violet);
-  filter: drop-shadow(0 0 16px rgba(117, 25, 249, 0.7));
-  transform-origin: 100px 100px;
-  animation: nodePulse 2.4s ease-in-out infinite;
+.intro-topbar {
+  position: absolute;
+  top: 26px;
+  left: 30px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  animation: introUp 0.7s ease-out 0.15s forwards;
 }
 
-@keyframes nodePulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.12);
-  }
+.intro-brand {
+  height: 26px;
+  width: auto;
+  opacity: 0.9;
 }
 
-.agent-signal-text {
+.intro-stack {
+  position: relative;
+  z-index: 6;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
+  text-align: center;
+  padding: 0 24px;
+  max-width: 720px;
 }
 
-.agent-signal-line {
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.32em;
-  font-size: 1.55rem;
+/* The real Agent One prism mark - fades and scales in, then keeps a slow,
+   gentle float. */
+.intro-prism {
+  width: clamp(84px, 12vw, 128px);
+  height: auto;
+  margin-bottom: 30px;
+  filter: drop-shadow(0 12px 40px rgba(117, 25, 249, 0.45));
+  opacity: 0;
+  transform: translateY(18px) scale(0.6);
+  animation: prismIn 0.9s cubic-bezier(0.22, 1.2, 0.36, 1) forwards,
+    prismFloat 6.5s ease-in-out 1s infinite;
+}
+
+@keyframes prismIn {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes prismFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(-2.5deg);
+  }
+  50% {
+    transform: translateY(-9px) rotate(2.5deg);
+  }
+}
+
+.intro-headline {
+  margin: 0 0 16px;
+  font-size: clamp(1.9rem, 4.4vw, 3.1rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
   color: var(--text);
   opacity: 0;
-  transform: translateY(14px);
-  animation: signalTextIn 0.7s ease-out forwards;
+  animation: introUp 0.75s ease-out 0.4s forwards;
 }
 
-.agent-signal-line.line-1 {
-  animation-delay: 0.35s;
+.intro-tm {
+  font-size: 0.45em;
+  vertical-align: super;
+  font-weight: 500;
+  margin-left: 0.1em;
+  color: var(--text-muted);
 }
 
-.agent-signal-line.line-2 {
-  color: var(--steel);
-  animation-delay: 0.6s;
+.intro-sub {
+  margin: 0 0 40px;
+  max-width: 560px;
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  line-height: 1.6;
+  color: var(--text-muted);
+  opacity: 0;
+  animation: introUp 0.75s ease-out 0.6s forwards;
 }
 
-@keyframes signalTextIn {
+/* Glowing pill CTA - stands in for Agent One's "Ask me anything" bar. The
+   glow is steady, not pulsing. */
+.intro-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 17px 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 118, 242, 0.5);
+  background: linear-gradient(150deg, rgba(117, 25, 249, 0.22) 0%, rgba(244, 39, 200, 0.14) 100%), #0c0912;
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px rgba(117, 25, 249, 0.3),
+    0 0 26px rgba(117, 25, 249, 0.4),
+    0 0 60px rgba(244, 39, 200, 0.24);
+  opacity: 0;
+  animation: introUp 0.75s ease-out 0.85s forwards;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.intro-cta::before {
+  content: '';
+  position: absolute;
+  inset: -16px;
+  z-index: -1;
+  border-radius: 999px;
+  background: radial-gradient(60% 70% at 30% 50%, rgba(117, 25, 249, 0.4), transparent 70%),
+    radial-gradient(60% 70% at 80% 50%, rgba(244, 39, 200, 0.3), transparent 72%);
+  filter: blur(16px);
+  pointer-events: none;
+}
+
+.intro-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px rgba(125, 118, 242, 0.55),
+    0 0 34px rgba(117, 25, 249, 0.55),
+    0 0 78px rgba(244, 39, 200, 0.34);
+}
+
+.intro-cta:active {
+  transform: translateY(0);
+}
+
+.intro-cta-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.intro-cta-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.intro-cta-hint {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes introUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.video-player {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 1;
-  filter: blur(7px);
-  transform: scale(1.06); /* hides the blurred edge from object-fit: cover */
-}
-
-/* Multiply-blend brand tint - pulls whatever colors are in the footage
-   toward our indigo/black so it reads on-brand instead of like raw stock
-   video, without flattening it into a solid color block. */
-.video-tint {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  background: linear-gradient(160deg, var(--indigo) 0%, #000000 100%);
-  mix-blend-mode: multiply;
-  opacity: 0.45;
-  pointer-events: none;
-}
-
-.countdown-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 30px;
-}
-
-.red-light {
-  width: 100px;
-  height: 100px;
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 3px solid rgba(255, 255, 255, 0.2);
-}
-
-.light {
-  width: 80px;
-  height: 80px;
-  background: var(--error);
-  border-radius: 50%;
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
-  transition: all 0.3s ease;
-}
-
-.light.blinking {
-  animation: redBlink 0.5s infinite;
-}
-
-@keyframes redBlink {
-  0%, 100% {
-    background: #ef4444;
-    box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+@media (prefers-reduced-motion: reduce) {
+  .intro-ambient,
+  .intro-prism {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
   }
-  50% {
-    background: #dc2626;
-    box-shadow: 0 0 30px rgba(239, 68, 68, 1);
-  }
-}
-
-.countdown-text {
-  font-size: 5rem;
-  font-weight: 700;
-  color: var(--text);
-  text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
-  min-width: 150px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.tap-prompt {
-  position: absolute;
-  bottom: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  z-index: 10;
-}
-
-.tap-prompt p {
-  font-size: 1.2rem;
-  color: var(--text-muted);
-  animation: pulse 2s infinite;
-}
-
-.continue-btn {
-  position: absolute;
-  bottom: 40px;
-  right: 40px;
-  padding: 14px 28px;
-  background: var(--violet);
-  color: #fff;
-  font-weight: 700;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  z-index: 10;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.continue-btn:hover {
-  background: var(--steel);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(117, 25, 249, 0.35);
-}
-
-.continue-btn:active {
-  transform: translateY(0);
 }
 
 @media (max-width: 768px) {
-  .intro-stack {
-    gap: 28px;
+  .intro-topbar {
+    top: 16px;
+    left: 18px;
   }
 
-  .agent-signal-rings {
-    width: 130px;
-    height: 130px;
+  .intro-brand {
+    height: 20px;
   }
 
-  .agent-signal-line {
-    font-size: 1.15rem;
-    letter-spacing: 0.24em;
+  .intro-prism {
+    margin-bottom: 22px;
   }
 
-  .countdown-container {
-    gap: 20px;
+  .intro-sub {
+    margin-bottom: 30px;
   }
 
-  .red-light {
-    width: 70px;
-    height: 70px;
-    border-width: 2px;
+  .intro-cta {
+    padding: 14px 22px;
+    font-size: 0.95rem;
+    gap: 10px;
   }
 
-  .light {
-    width: 60px;
-    height: 60px;
+  .intro-cta-hint {
+    display: none;
   }
 
-  .countdown-text {
-    font-size: 3.5rem;
-  }
-
-  .continue-btn {
-    bottom: 20px;
-    right: 20px;
-    padding: 10px 20px;
-    font-size: 0.85rem;
+  .intro-cta-divider {
+    display: none;
   }
 }

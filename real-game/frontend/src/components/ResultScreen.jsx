@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { useState, useEffect, useRef } from 'react'
 import RankCelebration from './RankCelebration'
+import { API_BASE } from '../config'
 import './ResultScreen.css'
 
 // How long the top-3 celebration takeover plays before handing off to the
@@ -8,8 +9,6 @@ import './ResultScreen.css'
 // SuccessModal's 3s timer, just a bit longer since this one has more to land
 // (trophy, ordinal, confetti) before the leaderboard reveal underneath.
 const CELEBRATION_DURATION_MS = 4500
-
-const API_BASE = 'http://localhost:3001/api'
 
 // Counts up from 0 to the final time instead of just appearing - gives the
 // result a "reveal" beat instead of a flat number dump, matching the
@@ -105,17 +104,17 @@ function ResultScreen({ gameResult, onPlayAgain }) {
     return `${minutes}m ${seconds}s`
   }
 
-  const getTotalPenalty = () => {
-    const failedScenarios = gameResult.scenarioRuns.filter(
-      (sr) => sr.result === 'failure'
-    ).length
-    return failedScenarios * 3
-  }
-
   const displayedTimeMs = useCountUp(gameResult.totalTime)
 
   return (
     <div className="result-screen">
+      {/* Large Extreme wordmark sitting behind the content as a slowly
+          pulsing/glowing watermark - the booth-screen ambient treatment the
+          client asked for, replacing the old small fixed corner mark. */}
+      <div className="result-bg-logo" aria-hidden="true">
+        <img src="/extreme-logo.png" alt="" />
+      </div>
+
       {/* shared gradient defs for the rank medals - one set of ids, reused
           by every RankBadge instance below */}
       <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
@@ -163,11 +162,6 @@ function ResultScreen({ gameResult, onPlayAgain }) {
               <div className="time-value">
                 {formatTime(displayedTimeMs)}
               </div>
-              {getTotalPenalty() > 0 && (
-                <div className="penalty-info">
-                  +{getTotalPenalty()}s penalty
-                </div>
-              )}
             </div>
 
             <div className="scenarios-summary">
@@ -244,8 +238,6 @@ function ResultScreen({ gameResult, onPlayAgain }) {
           </button>
         </div>
       </div>
-
-      <img src="/extreme-logo.png" alt="Extreme Networks" className="result-logo" />
     </div>
   )
 }

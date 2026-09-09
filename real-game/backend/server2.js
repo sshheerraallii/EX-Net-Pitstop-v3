@@ -43,14 +43,22 @@ const port = process.env.PORT || 3001;
 // -------------------------
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public"));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Absolute path so it resolves the same no matter what cwd the process was
+// started from (dev shell, Electron shell, a service, ...).
+app.use(express.static(path.join(__dirname, "public")));
+
+// Writable data root: the backend folder in dev, a per-user folder in the
+// packaged desktop build (set by the Electron shell). Uploaded rosters and
+// intro videos land under here.
+const DATA_DIR = process.env.PITSTOP_DATA_DIR || __dirname;
+const ADMIN_UPLOAD_DIR = path.join(DATA_DIR, "uploads");
+
+app.use("/uploads", express.static(ADMIN_UPLOAD_DIR));
 
 // -------------------------
 // MULTER SETUP
 // -------------------------
 const upload = multer({ storage: multer.memoryStorage() });
-const ADMIN_UPLOAD_DIR = path.join(__dirname, "uploads");
 const ADMIN_ROSTER_DIR = path.join(ADMIN_UPLOAD_DIR, "roster");
 const ADMIN_VIDEO_DIR = path.join(ADMIN_UPLOAD_DIR, "intro");
 
@@ -167,6 +175,10 @@ class GameSession {
     this.awaitingBaseline = false;
     this.snmpOk = false;
     this.lastSnmpError = null;
+    // Every non-target port brought up during the current scenario. Cumulative:
+    // a wrong cable still counts even after it's pulled back out. Drives the
+    // silent penalty - it never fails or skips the scenario.
+    this.wrongPortsSeen = new Set();
 
     for (let i = 1; i <= 24; i += 1) {
       this.portStates.set(i, {
@@ -182,6 +194,7 @@ class GameSession {
     this.gameStartTime = new Date();
     this.gameEndTime = null;
     this.isGameActive = true;
+    this.wrongPortsSeen = new Set();
 
     // Ports already up when the scenario starts (cables left in from the previous
     // scenario) must not count. The baseline is captured on the next SNMP read,
@@ -362,6 +375,7 @@ class GameSession {
     this.activePorts = new Set();
     this.baselinePorts = new Set();
     this.awaitingBaseline = false;
+    this.wrongPortsSeen = new Set();
     this.gameStartTime = null;
     this.gameEndTime = null;
     this.isGameActive = false;
@@ -390,8 +404,8 @@ class GameSession {
     return plugged;
   }
 
-  // The client's rule: the scenario resolves once the player has plugged in as many
-  // ports as the scenario requires — whether or not they're the right ones.
+  // Kept for reference / debugging: true once as many ports are plugged as the
+  // scenario needs, right or wrong. No longer what resolves a scenario.
   isCountComplete() {
     if (!this.isGameActive || this.activePorts.size === 0) {
       return false;
@@ -400,7 +414,48 @@ class GameSession {
     return this.getNewlyPluggedPorts().length >= this.activePorts.size;
   }
 
+  // Fold any non-target port that's currently up into wrongPortsSeen. Called on
+  // every state read so a wrong cable is remembered even if it's pulled again
+  // before the scenario is solved.
+  recordWrongPorts() {
+    if (!this.isGameActive) return;
+
+    for (let i = 1; i <= 24; i += 1) {
+      const state = this.portStates.get(i);
+      if (
+        state &&
+        state.status === "up" &&
+        !this.baselinePorts.has(i) &&
+        !this.activePorts.has(i)
+      ) {
+        this.wrongPortsSeen.add(i);
+      }
+    }
+  }
+
+  // The scenario is genuinely solved: every required port is up and no wrong
+  // port is currently plugged in. This - not the count - is what advances a
+  // scenario now, so wrong ports can't fail or skip it.
+  isCorrectComplete() {
+    if (!this.isGameActive || this.activePorts.size === 0) {
+      return false;
+    }
+
+    const requiredAllUp = Array.from(this.activePorts).every((port) => {
+      const state = this.portStates.get(port);
+      return state && state.status === "up";
+    });
+    if (!requiredAllUp) return false;
+
+    const hasExtras = this.getNewlyPluggedPorts().some(
+      (port) => !this.activePorts.has(port)
+    );
+    return !hasExtras;
+  }
+
   getGameState() {
+    this.recordWrongPorts();
+
     const ports = [];
 
     for (let i = 1; i <= 24; i += 1) {
@@ -423,6 +478,8 @@ class GameSession {
       ports,
       newlyPluggedPorts: this.getNewlyPluggedPorts(),
       countComplete: this.isCountComplete(),
+      correctComplete: this.isCorrectComplete(),
+      wrongPortsSeen: Array.from(this.wrongPortsSeen),
       baselineCaptured: !this.awaitingBaseline,
       snmpOk: this.snmpOk,
       snmpError: this.lastSnmpError,
@@ -1635,24 +1692,42 @@ app.post("/api/scenarios/submit", (req, res) => {
     }
 
     const requiredPorts = JSON.parse(scenarioRun.required_ports);
-    const sortedRequired = requiredPorts.sort((a, b) => a - b);
-    const sortedPlugged = plugged_ports.sort((a, b) => a - b);
+    const sortedRequired = [...requiredPorts].sort((a, b) => a - b);
+    const sortedPlugged = [...plugged_ports].sort((a, b) => a - b);
 
-    const isCorrect =
+    const isExactMatch =
       sortedRequired.length === sortedPlugged.length &&
       sortedRequired.every((port, idx) => port === sortedPlugged[idx]);
 
-    let penaltyApplied = 0;
+    if (!isExactMatch) {
+      // The frontend only submits once a scenario is actually solved, so this
+      // is just a data-quality log - never a reason to fail the scenario.
+      console.warn(
+        `scenarios/submit ${scenario_run_id}: plugged [${sortedPlugged.join(
+          ", "
+        )}] != required [${sortedRequired.join(", ")}]`
+      );
+    }
 
-    if (!isCorrect) {
+    // Wrong ports during the attempt cost a silent, flat penalty and nothing
+    // more - the scenario is never marked failed and never skipped. The player
+    // works the same scenario until it's right; the penalty just rides along on
+    // the run time.
+    const reportedWrong = Number(req.body.wrong_port_count);
+    const hadWrongPorts =
+      (Number.isFinite(reportedWrong)
+        ? reportedWrong
+        : gameSession.wrongPortsSeen.size) > 0;
+
+    let penaltyApplied = 0;
+    if (hadWrongPorts) {
       penaltyApplied = 1;
       updateRunWithPenalty(run_id, PENALTY_MS);
     }
 
-    const result = isCorrect ? "success" : "failure";
     const updatedScenarioRun = completeScenarioRun(
       scenario_run_id,
-      result,
+      "success",
       time_ms,
       penaltyApplied
     );
@@ -1662,10 +1737,10 @@ app.post("/api/scenarios/submit", (req, res) => {
 
     return res.json({
       success: true,
-      result: isCorrect ? "success" : "failure",
-      message: isCorrect
-        ? "Scenario completed successfully!"
-        : "Incorrect ports. Moving to next scenario...",
+      result: "success",
+      message: hadWrongPorts
+        ? "Scenario completed (silent penalty applied)"
+        : "Scenario completed successfully!",
       scenarioRun: updatedScenarioRun,
       penaltyApplied,
       nextScenario: nextPendingScenario || null,
@@ -1679,6 +1754,37 @@ app.post("/api/scenarios/submit", (req, res) => {
     });
   }
 });
+
+// -------------------------
+// STATIC FRONTEND (single-origin kiosk build)
+// -------------------------
+// When ../frontend/dist exists (built with `npm run build` in the frontend
+// folder), this process also serves the React app - so the game, the
+// spectator leaderboard at /leaderboard, and the menu all run from this one
+// port with no separate web server, no CORS, and no hard-coded host in the
+// bundle. Any GET that isn't an /api or /uploads call and isn't a real file
+// falls back to index.html so client-side routes survive a hard refresh.
+const frontendDist =
+  process.env.PITSTOP_FRONTEND_DIR ||
+  path.join(__dirname, "..", "frontend", "dist");
+if (fs.existsSync(path.join(frontendDist, "index.html"))) {
+  app.use(express.static(frontendDist));
+
+  app.use((req, res, next) => {
+    if (req.method !== "GET") return next();
+    if (req.path.startsWith("/api/") || req.path.startsWith("/uploads/")) {
+      return next();
+    }
+    if (req.path.includes(".")) return next(); // asset request - let it 404
+    return res.sendFile(path.join(frontendDist, "index.html"));
+  });
+
+  console.log(`Serving frontend build from ${frontendDist}`);
+} else {
+  console.log(
+    "No frontend build at ../frontend/dist - running API only (use `npm run dev` in ../frontend for the UI)."
+  );
+}
 
 // -------------------------
 // ERROR HANDLER

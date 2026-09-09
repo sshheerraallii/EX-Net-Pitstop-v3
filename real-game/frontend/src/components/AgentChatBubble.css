@@ -6,7 +6,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
+  gap: 16px;
   max-width: min(460px, calc(100vw - 56px));
 }
 
@@ -25,7 +25,7 @@
   transition: opacity 0.5s cubic-bezier(0.22, 1.2, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1.2, 0.36, 1);
 }
 
-.agent-chat-widget.visible .agent-chat-bubble {
+.agent-chat-bubble.visible {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
@@ -114,25 +114,75 @@
   }
 }
 
-.agent-chat-task {
-  margin-top: 12px;
-  padding: 10px 14px;
-  background: rgba(117, 25, 249, 0.1);
-  border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  color: var(--text-muted);
-  font-size: 0.95rem;
+/* The "Nudge" - the instruction telling the player what to do. It's a
+   SEPARATE panel that sits ABOVE the chat bubble and lands FIRST, styled
+   after Agent One's own nudge popups: dark surface, rounded, larger type,
+   and a soft, STEADY multi-colour (violet -> magenta) glow. No pulsing -
+   the glow just sits there, lit. This is the most emphasised element on
+   the screen, not the least. */
+.agent-chat-nudge {
+  position: relative;
+  align-self: stretch;
+  max-width: 460px;
+  padding: 17px 21px;
+  background: linear-gradient(150deg, rgba(117, 25, 249, 0.24) 0%, rgba(244, 39, 200, 0.15) 100%), #0d0a18;
+  border: 1px solid rgba(125, 118, 242, 0.6);
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px rgba(117, 25, 249, 0.32),
+    0 0 24px rgba(117, 25, 249, 0.42),
+    0 0 54px rgba(244, 39, 200, 0.24);
   opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 0.35s ease, transform 0.35s ease;
+  transform: translateY(16px) scale(0.94);
+  transform-origin: bottom left;
+  transition: opacity 0.45s cubic-bezier(0.22, 1.2, 0.36, 1), transform 0.45s cubic-bezier(0.22, 1.2, 0.36, 1);
 }
 
-.agent-chat-task.visible {
+/* Soft static halo behind the panel - a steady lit glow, never animated. */
+.agent-chat-nudge::before {
+  content: '';
+  position: absolute;
+  inset: -14px;
+  z-index: -1;
+  border-radius: 26px;
+  background: radial-gradient(60% 60% at 30% 40%, rgba(117, 25, 249, 0.4), transparent 70%),
+    radial-gradient(70% 70% at 80% 70%, rgba(244, 39, 200, 0.28), transparent 72%);
+  filter: blur(14px);
+  pointer-events: none;
+}
+
+.agent-chat-nudge.visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
-.agent-chat-task b {
+.agent-chat-nudge-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 8px;
+  font-weight: 800;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--steel);
+}
+
+.agent-chat-nudge-spark {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--violet);
+  box-shadow: 0 0 8px 1px rgba(117, 25, 249, 0.9);
+}
+
+.agent-chat-nudge-body {
+  color: var(--text);
+  font-size: 1.3rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.agent-chat-nudge-body b {
   color: var(--highlight);
 }
 
@@ -147,7 +197,9 @@
   height: 58px;
   border-radius: 50%;
   flex-shrink: 0;
-  background: linear-gradient(135deg, var(--violet), var(--indigo));
+  /* Dark disc, matching Agent One's near-black product canvas, so the
+     colourful prism mark reads cleanly on top. */
+  background: radial-gradient(circle at 50% 38%, #1b1630 0%, #0a0812 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -158,14 +210,15 @@
   transition: opacity 0.35s ease 0.08s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s;
 }
 
-.agent-chat-widget.visible .agent-chat-avatar {
+.agent-chat-avatar-row.visible .agent-chat-avatar {
   opacity: 1;
   transform: scale(1);
 }
 
 .agent-chat-avatar-icon {
-  width: 30px;
-  height: 30px;
+  width: 38px;
+  height: 38px;
+  display: block;
 }
 
 .agent-chat-avatar-ring {
@@ -177,7 +230,7 @@
   pointer-events: none;
 }
 
-.agent-chat-widget.visible .agent-chat-avatar-ring {
+.agent-chat-avatar-row.visible .agent-chat-avatar-ring {
   animation: agentBubbleRingPop 0.9s ease-out 0.15s;
 }
 
@@ -208,9 +261,12 @@
     font-size: 1rem;
   }
 
-  .agent-chat-task {
-    font-size: 0.85rem;
-    padding: 8px 12px;
+  .agent-chat-nudge {
+    padding: 14px 16px;
+  }
+
+  .agent-chat-nudge-body {
+    font-size: 1.12rem;
   }
 
   .agent-chat-avatar {
@@ -219,7 +275,7 @@
   }
 
   .agent-chat-avatar-icon {
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
   }
 }
