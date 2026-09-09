@@ -68,3 +68,14 @@
     text-align: center;
   }
 }
+
+/* Live restored state: the physical ports are in, so the staged failover route
+   stops competing for attention and the direct path reads as the live one. */
+.branch-link-card.is-restored .branch-link-failover {
+  opacity: 0.25;
+}
+
+.branch-link-card.is-restored .branch-link-label-dot {
+  background: var(--success);
+  box-shadow: 0 0 12px var(--success);
+}

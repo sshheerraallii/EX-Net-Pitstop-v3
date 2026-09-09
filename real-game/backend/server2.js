@@ -100,6 +100,11 @@ const ifOperStatusBaseOid = "1.3.6.1.2.1.2.2.1.8";
 
 const snmpSession = snmp.createSession(switchIP, community, options);
 
+// Flat penalty per scenario when the wrong ports are plugged (client spec: 2s).
+const PENALTY_MS = 2000;
+// How often the port map is retried if the switch is unreachable at boot.
+const PORT_MAP_RETRY_MS = 10000;
+
 // -------------------------
 // HELPERS
 // -------------------------
@@ -158,6 +163,10 @@ class GameSession {
     this.gameStartTime = null;
     this.gameEndTime = null;
     this.isGameActive = false;
+    this.baselinePorts = new Set();
+    this.awaitingBaseline = false;
+    this.snmpOk = false;
+    this.lastSnmpError = null;
 
     for (let i = 1; i <= 24; i += 1) {
       this.portStates.set(i, {
@@ -173,6 +182,12 @@ class GameSession {
     this.gameStartTime = new Date();
     this.gameEndTime = null;
     this.isGameActive = true;
+
+    // Ports already up when the scenario starts (cables left in from the previous
+    // scenario) must not count. The baseline is captured on the next SNMP read,
+    // since real port state isn't known until then.
+    this.baselinePorts = new Set();
+    this.awaitingBaseline = true;
 
     for (let i = 1; i <= 24; i += 1) {
       this.portStates.set(i, {
@@ -230,6 +245,21 @@ class GameSession {
             timestamp: new Date(),
           });
         });
+
+        if (this.awaitingBaseline) {
+          this.baselinePorts = new Set(
+            ports.filter((port) => this.portStates.get(port)?.status === "up")
+          );
+          this.awaitingBaseline = false;
+          console.log(
+            `Baseline captured, ignoring already-up ports: ${
+              Array.from(this.baselinePorts).join(", ") || "none"
+            }`
+          );
+        }
+
+        this.snmpOk = true;
+        this.lastSnmpError = null;
 
         return resolve();
       });
@@ -332,6 +362,8 @@ class GameSession {
   reset() {
     this.currentSession = null;
     this.activePorts = new Set();
+    this.baselinePorts = new Set();
+    this.awaitingBaseline = false;
     this.gameStartTime = null;
     this.gameEndTime = null;
     this.isGameActive = false;
@@ -342,6 +374,32 @@ class GameSession {
         timestamp: new Date(),
       });
     }
+  }
+
+  // Ports that came up AFTER the scenario started. Cables left in from a previous
+  // scenario are in baselinePorts and deliberately excluded.
+  getNewlyPluggedPorts() {
+    const plugged = [];
+
+    for (let i = 1; i <= 24; i += 1) {
+      const state = this.portStates.get(i);
+
+      if (state && state.status === "up" && !this.baselinePorts.has(i)) {
+        plugged.push(i);
+      }
+    }
+
+    return plugged;
+  }
+
+  // The client's rule: the scenario resolves once the player has plugged in as many
+  // ports as the scenario requires — whether or not they're the right ones.
+  isCountComplete() {
+    if (!this.isGameActive || this.activePorts.size === 0) {
+      return false;
+    }
+
+    return this.getNewlyPluggedPorts().length >= this.activePorts.size;
   }
 
   getGameState() {
@@ -365,6 +423,11 @@ class GameSession {
       endTime: this.gameEndTime,
       targetPorts: Array.from(this.activePorts),
       ports,
+      newlyPluggedPorts: this.getNewlyPluggedPorts(),
+      countComplete: this.isCountComplete(),
+      baselineCaptured: !this.awaitingBaseline,
+      snmpOk: this.snmpOk,
+      snmpError: this.lastSnmpError,
       completedTargets: Array.from(this.activePorts).filter((port) => {
         const state = this.portStates.get(port);
         return state && state.status === "up";
@@ -425,15 +488,46 @@ function isAdminAnswerValid(answer = "") {
 // -------------------------
 // BUILD PORT MAP ON STARTUP
 // -------------------------
-buildPortMap()
-  .then((map) => {
-    portMapGlobal = map;
-    console.log("✅ Port map built successfully");
-    console.log(portMapGlobal);
-  })
-  .catch((error) => {
-    console.error("❌ Failed to build port map:", error);
-  });
+// The switch may not be reachable when this server boots (booth power-up order is
+// not guaranteed). Keep retrying instead of leaving portMapGlobal empty forever,
+// which would make every /api/game/status call fail until a manual restart.
+let portMapRetryTimer = null;
+
+function initPortMap() {
+  return buildPortMap()
+    .then((map) => {
+      portMapGlobal = map;
+
+      if (portMapRetryTimer) {
+        clearInterval(portMapRetryTimer);
+        portMapRetryTimer = null;
+      }
+
+      console.log(`Port map built successfully (${map.size} ports)`);
+      return map;
+    })
+    .catch((error) => {
+      console.error("Failed to build port map:", error.message);
+
+      if (!portMapRetryTimer) {
+        console.log(`Retrying port map every ${PORT_MAP_RETRY_MS / 1000}s...`);
+        portMapRetryTimer = setInterval(() => {
+          buildPortMap()
+            .then((map) => {
+              portMapGlobal = map;
+              clearInterval(portMapRetryTimer);
+              portMapRetryTimer = null;
+              console.log(`Port map recovered (${map.size} ports)`);
+            })
+            .catch(() => {});
+        }, PORT_MAP_RETRY_MS);
+      }
+
+      return null;
+    });
+}
+
+initPortMap();
 
 // -------------------------
 // HEALTH
@@ -502,15 +596,22 @@ app.post("/api/game/start", (req, res) => {
 app.get("/api/game/status", async (req, res) => {
   try {
     if (portMapGlobal.size === 0) {
-      return res.status(500).json({
-        error: "Port map not initialized yet",
-      });
+      // Switch wasn't reachable at boot. Report last known state rather than 500 —
+      // the retry loop may still recover, and the kiosk must not hard-fail mid-run.
+      gameSession.snmpOk = false;
+      gameSession.lastSnmpError = "Port map not initialized";
+      return res.json(gameSession.getGameState());
     }
 
-    await gameSession.refreshPortStates(portMapGlobal);
-
-    if (gameSession.isGameActive && gameSession.checkGameComplete()) {
-      gameSession.endGame();
+    try {
+      await gameSession.refreshPortStates(portMapGlobal);
+    } catch (snmpError) {
+      // Hold the last known port state. A dropped SNMP read must not advance a
+      // scenario or freeze the game; the next poll usually recovers.
+      gameSession.snmpOk = false;
+      gameSession.lastSnmpError = snmpError.message;
+      console.warn("SNMP read failed, serving last known state:", snmpError.message);
+      return res.json(gameSession.getGameState());
     }
 
     return res.json(gameSession.getGameState());
@@ -1539,7 +1640,7 @@ app.post("/api/scenarios/submit", (req, res) => {
 
     if (!isCorrect) {
       penaltyApplied = 1;
-      updateRunWithPenalty(run_id, 3000);
+      updateRunWithPenalty(run_id, PENALTY_MS);
     }
 
     const result = isCorrect ? "success" : "failure";

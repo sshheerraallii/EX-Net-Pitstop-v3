@@ -53,14 +53,16 @@ function SiteNode({ x, cy, city, status }) {
   )
 }
 
-function BranchLinkMap({ message }) {
+// `connected` reflects real switch state: true once every port this scenario
+// requires is physically plugged in. The link then repairs itself on screen.
+function BranchLinkMap({ message, connected = false }) {
   const cities = parseBranchCities(message)
   if (!cities) return null
   const { offlineCity, onlineCity } = cities
   const failoverPath = 'M 170 78 Q 500 130 830 78'
 
   return (
-    <div className="branch-link-card">
+    <div className={`branch-link-card${connected ? ' is-restored' : ''}`}>
       <div className="branch-link-label">
         <span className="branch-link-label-dot"></span>
         Branch Link Status
@@ -78,7 +80,9 @@ function BranchLinkMap({ message }) {
           </radialGradient>
         </defs>
 
-        {/* staged failover route - dashed, marching, waiting for approval */}
+        {/* staged failover route - dashed, marching, waiting for approval.
+            Dimmed by CSS once the primary link is physically restored. */}
+        <g className="branch-link-failover">
         <path
           d={failoverPath}
           fill="none"
@@ -93,30 +97,60 @@ function BranchLinkMap({ message }) {
         <circle r="4.5" fill="var(--highlight)">
           <animateMotion dur="2.6s" repeatCount="indefinite" path={failoverPath} />
         </circle>
-
-        {/* primary link, broken in the middle */}
-        <line x1="170" y1="60" x2="452" y2="60" stroke="var(--error)" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
-        <line x1="548" y1="60" x2="830" y2="60" stroke="var(--border-strong)" strokeWidth="3" strokeLinecap="round" opacity="0.55" />
-
-        {/* break glyph - pulsing ring + X */}
-        <circle cx="500" cy="60" r="20" fill="none" stroke="var(--error)" strokeWidth="2">
-          <animate attributeName="r" values="16;30;16" dur="1.6s" repeatCount="indefinite" />
-          <animate attributeName="opacity" values="0.7;0;0.7" dur="1.6s" repeatCount="indefinite" />
-        </circle>
-        <g stroke="var(--error)" strokeWidth="3.5" strokeLinecap="round">
-          <line x1="490" y1="48" x2="510" y2="72">
-            <animate attributeName="opacity" values="1;0.35;1" dur="0.9s" repeatCount="indefinite" />
-          </line>
-          <line x1="510" y1="48" x2="490" y2="72">
-            <animate attributeName="opacity" values="1;0.35;1" dur="0.9s" repeatCount="indefinite" />
-          </line>
         </g>
 
-        <SiteNode x={90} cy={60} city={offlineCity} status="offline" />
+        {/* primary link: broken until the physical ports are in, then whole and green */}
+        {connected ? (
+          <>
+            <line x1="170" y1="60" x2="830" y2="60" stroke="var(--success)" strokeWidth="3.5" strokeLinecap="round">
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" />
+            </line>
+            {/* restored glyph - settling ring + check */}
+            <circle cx="500" cy="60" r="20" fill="none" stroke="var(--success)" strokeWidth="2">
+              <animate attributeName="r" values="30;18" dur="0.5s" fill="freeze" />
+              <animate attributeName="opacity" values="0;0.8" dur="0.5s" fill="freeze" />
+            </circle>
+            <polyline
+              points="490,60 497,68 511,52"
+              fill="none"
+              stroke="var(--success)"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <animate attributeName="opacity" values="0;1" dur="0.4s" begin="0.2s" fill="freeze" />
+            </polyline>
+          </>
+        ) : (
+          <>
+            <line x1="170" y1="60" x2="452" y2="60" stroke="var(--error)" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
+            <line x1="548" y1="60" x2="830" y2="60" stroke="var(--border-strong)" strokeWidth="3" strokeLinecap="round" opacity="0.55" />
+
+            {/* break glyph - pulsing ring + X */}
+            <circle cx="500" cy="60" r="20" fill="none" stroke="var(--error)" strokeWidth="2">
+              <animate attributeName="r" values="16;30;16" dur="1.6s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.7;0;0.7" dur="1.6s" repeatCount="indefinite" />
+            </circle>
+            <g stroke="var(--error)" strokeWidth="3.5" strokeLinecap="round">
+              <line x1="490" y1="48" x2="510" y2="72">
+                <animate attributeName="opacity" values="1;0.35;1" dur="0.9s" repeatCount="indefinite" />
+              </line>
+              <line x1="510" y1="48" x2="490" y2="72">
+                <animate attributeName="opacity" values="1;0.35;1" dur="0.9s" repeatCount="indefinite" />
+              </line>
+            </g>
+          </>
+        )}
+
+        <SiteNode x={90} cy={60} city={offlineCity} status={connected ? 'online' : 'offline'} />
         <SiteNode x={910} cy={60} city={onlineCity} status="online" />
       </svg>
 
-      <div className="branch-link-caption">Failover staged &mdash; awaiting your approval to restore the link</div>
+      <div className="branch-link-caption">
+        {connected
+          ? 'Primary link restored \u2014 traffic back on the direct path'
+          : 'Failover staged \u2014 awaiting your approval to restore the link'}
+      </div>
     </div>
   )
 }

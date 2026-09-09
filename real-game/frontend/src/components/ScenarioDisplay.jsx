@@ -13,7 +13,7 @@ function taskCopy(scenario) {
   return 'upgrade the Firmware'
 }
 
-function ScenarioDisplay({ scenario, progress, requiredPorts }) {
+function ScenarioDisplay({ scenario, progress, requiredPorts, pluggedPorts }) {
   const imageUrl = `/scenarios/${scenario.background_image}`
 
   return (
@@ -59,7 +59,16 @@ function ScenarioDisplay({ scenario, progress, requiredPorts }) {
             instead of leaving it as text alone. Parses city names straight
             out of the scenario's own message, so it's correct for all 3
             Branch variants. */}
-        {scenario.category === 'Branch' && <BranchLinkMap message={scenario.agent_message} />}
+        {scenario.category === 'Branch' && (
+          <BranchLinkMap
+            message={scenario.agent_message}
+            connected={
+              Array.isArray(requiredPorts) &&
+              requiredPorts.length > 0 &&
+              requiredPorts.every((port) => (pluggedPorts || []).includes(port))
+            }
+          />
+        )}
 
         {/* Only renders for DataCenter scenarios - the odd one out: nothing
             is currently broken here, the cable break already auto-failed-over
