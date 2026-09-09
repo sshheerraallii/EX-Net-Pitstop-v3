@@ -12,6 +12,18 @@ const POLL_INTERVAL_MS = 500
 // across consecutive polls before acting on it.
 const STABLE_POLLS_REQUIRED = 2
 
+// Keyboard stand-in for the physical switch, so the game can be exercised end to end
+// without hardware — and on the same build that ships, not a dev-only path.
+// 1-9 are ports 1-9; A-O continue from port 10 through 24.
+const KEY_PORT_MAP = (() => {
+  const map = {}
+  for (let i = 1; i <= 9; i += 1) map[String(i)] = i
+  'abcdefghijklmno'.split('').forEach((ch, idx) => {
+    map[ch] = idx + 10
+  })
+  return map
+})()
+
 function ScenarioGame({ runId, player, onGameComplete }) {
   const [currentScenarioRun, setCurrentScenarioRun] = useState(null)
   const [scenarioDetails, setScenarioDetails] = useState(null)
@@ -23,6 +35,7 @@ function ScenarioGame({ runId, player, onGameComplete }) {
   const [error, setError] = useState('')
   const [livePluggedPorts, setLivePluggedPorts] = useState([])
   const [switchOnline, setSwitchOnline] = useState(true)
+  const [simulated, setSimulated] = useState(false)
 
   // Guards against a second submit firing while the first is in flight.
   const submittingRef = useRef(false)
@@ -116,11 +129,14 @@ function ScenarioGame({ runId, player, onGameComplete }) {
           if (cancelled) return
 
           setSwitchOnline(data.snmpOk !== false)
+          setSimulated(data.simulated === true)
           setLivePluggedPorts(data.newlyPluggedPorts || [])
 
           // A dropped SNMP read serves stale state, and the baseline isn't known
           // until the first successful read. Neither should advance a scenario.
-          if (data.snmpOk === false || !data.baselineCaptured) {
+          // Simulated mode has no SNMP feed by definition, so snmpOk being false
+          // there is expected and must not block advancement.
+          if ((data.snmpOk === false && !data.simulated) || !data.baselineCaptured) {
             stablePollsRef.current = 0
             return
           }
@@ -192,11 +208,30 @@ function ScenarioGame({ runId, player, onGameComplete }) {
     }
   }
 
-  // Dev-only escape hatch, kept because neither the kiosk build nor CI has a switch.
-  const handleManualAdvance = () => {
-    submittingRef.current = true
-    submitScenario(scenarioDetails.required_ports)
-  }
+  // Keyboard toggles hit the same /api/port endpoint the SNMP poller feeds, so a
+  // simulated run exercises the real completion path rather than bypassing it.
+  useEffect(() => {
+    if (!scenarioDetails) return
+
+    const onKeyDown = (event) => {
+      if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return
+      if (submittingRef.current) return
+
+      const target = event.target
+      if (target && /^(INPUT|TEXTAREA)$/.test(target.tagName)) return
+
+      const port = KEY_PORT_MAP[String(event.key).toLowerCase()]
+      if (!port) return
+
+      event.preventDefault()
+      axios.post(`${API_BASE}/port/toggle/${port}`).catch((err) => {
+        console.error(`Port ${port} toggle failed:`, err.message)
+      })
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [scenarioDetails?.id])
 
   if (loading) {
     return (
@@ -223,30 +258,14 @@ function ScenarioGame({ runId, player, onGameComplete }) {
         />
       )}
 
-      {!switchOnline && (
-        <div className="switch-offline-note">Switch link lost — retrying</div>
+      {simulated && (
+        <div className="switch-offline-note">
+          Keyboard mode — 1-9 and A-O toggle ports 1-24
+        </div>
       )}
 
-      {scenarioDetails && !showSuccess && import.meta.env.DEV && (
-        <button
-          onClick={handleManualAdvance}
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            padding: '10px 16px',
-            backgroundColor: '#7c3aed',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '0.9rem',
-            fontWeight: '600',
-            zIndex: 50,
-          }}
-        >
-          Test: Skip Scenario
-        </button>
+      {!switchOnline && !simulated && (
+        <div className="switch-offline-note">Switch link lost — retrying</div>
       )}
 
       {showSuccess && scenarioDetails && (

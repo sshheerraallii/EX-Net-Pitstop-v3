@@ -279,9 +279,9 @@ class GameSession {
       timestamp: new Date(),
     });
 
-    if (this.isGameActive && this.checkGameComplete()) {
-      this.endGame();
-    }
+    // Deliberately does NOT auto-end the session: the frontend decides when a
+    // scenario resolves, and ending here would flip isGameActive false and make
+    // isCountComplete() report false exactly when the player finished.
 
     return {
       port: portNumber,
@@ -311,9 +311,7 @@ class GameSession {
       timestamp: new Date(),
     });
 
-    if (this.isGameActive && this.checkGameComplete()) {
-      this.endGame();
-    }
+    // See togglePort: completion is the frontend's call, not this method's.
 
     return {
       port: portNumber,
@@ -598,9 +596,17 @@ app.get("/api/game/status", async (req, res) => {
     if (portMapGlobal.size === 0) {
       // Switch wasn't reachable at boot. Report last known state rather than 500 —
       // the retry loop may still recover, and the kiosk must not hard-fail mid-run.
+      // With no SNMP feed, port state is whatever the keyboard simulator toggled,
+      // so the baseline is simply "nothing plugged yet".
+      if (gameSession.awaitingBaseline) {
+        gameSession.baselinePorts = new Set();
+        gameSession.awaitingBaseline = false;
+      }
+
       gameSession.snmpOk = false;
       gameSession.lastSnmpError = "Port map not initialized";
-      return res.json(gameSession.getGameState());
+
+      return res.json({ ...gameSession.getGameState(), simulated: true });
     }
 
     try {
