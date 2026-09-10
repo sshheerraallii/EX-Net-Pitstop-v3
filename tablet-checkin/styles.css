@@ -23,6 +23,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   width: 100%;
@@ -68,9 +72,20 @@ body {
 }
 
 .checkin-header h1 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
   font-size: 1.9rem;
   font-weight: 700;
   margin-bottom: 8px;
+}
+
+.checkin-header-mark {
+  width: 0.8em;
+  height: 0.8em;
+  flex-shrink: 0;
+  filter: drop-shadow(0 3px 10px rgba(117, 25, 249, 0.45));
 }
 
 .checkin-header p {
@@ -98,7 +113,8 @@ body {
   color: var(--text-muted);
 }
 
-.form-group input {
+.form-group input,
+.form-group select {
   padding: 18px 18px;
   background: var(--surface-raised);
   border: 1px solid var(--border);
@@ -107,9 +123,19 @@ body {
   font-size: 1.15rem;
   font-family: inherit;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-.form-group input:focus {
+.form-group select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23a79fc4' d='M4 6l4 4 4-4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+  padding-right: 46px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
   outline: none;
   border-color: var(--violet);
   box-shadow: 0 0 0 4px rgba(117, 25, 249, 0.16);
@@ -162,69 +188,37 @@ body {
   cursor: not-allowed;
 }
 
-.recent-list {
-  margin-top: 32px;
-  padding-top: 24px;
-  border-top: 1px solid var(--border);
+/* Shown after Check In - counts down to the same moment the kiosk does. */
+.countdown-panel {
+  text-align: center;
+  padding: 20px 0 8px;
 }
 
-.recent-title {
+.countdown-label {
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.76rem;
-  color: var(--text-faint);
-  margin-bottom: 14px;
-}
-
-.recent-list ul {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.recent-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 0.92rem;
-  animation: recentIn 0.3s ease-out;
-}
-
-.recent-check {
+  letter-spacing: 0.12em;
+  font-size: 0.78rem;
   color: var(--success);
-  font-weight: 700;
-  flex-shrink: 0;
 }
 
-.recent-name {
-  flex: 1;
+.countdown-name {
+  margin-top: 8px;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: var(--text);
 }
 
-.recent-country {
+.countdown-num {
+  margin: 10px 0 14px;
+  font-size: 5.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--steel);
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-hint {
   color: var(--text-muted);
-  font-weight: 400;
-}
-
-.recent-time {
-  color: var(--text-faint);
-  font-size: 0.82rem;
-  flex-shrink: 0;
-}
-
-@keyframes recentIn {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  font-size: 1rem;
 }

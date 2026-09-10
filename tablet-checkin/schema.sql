@@ -7,8 +7,13 @@ CREATE TABLE IF NOT EXISTS checkins (
   name VARCHAR(120) NOT NULL,
   country VARCHAR(120) DEFAULT NULL,
   status ENUM('pending', 'claimed') NOT NULL DEFAULT 'pending',
+  start_at DATETIME DEFAULT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   claimed_at DATETIME DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE INDEX idx_checkins_status_created ON checkins (status, created_at);
+
+-- Already deployed the table before this update? Run this one line instead
+-- of the CREATE above (phpMyAdmin -> SQL tab):
+--   ALTER TABLE checkins ADD COLUMN start_at DATETIME DEFAULT NULL AFTER status;

@@ -28,15 +28,32 @@ if (strlen($country) > 120) {
     $country = substr($country, 0, 120);
 }
 
+$countdown = defined('CHECKIN_COUNTDOWN_SECONDS') ? (int)CHECKIN_COUNTDOWN_SECONDS : 20;
+
 try {
     $pdo = checkin_db();
-    $stmt = $pdo->prepare('INSERT INTO checkins (name, country, status) VALUES (?, ?, "pending")');
-    $stmt->execute([$name, $country !== '' ? $country : null]);
+    // start_at is the shared moment the tablet and the kiosk both count down
+    // to, set from the DB server's clock so the two stay in sync.
+    $stmt = $pdo->prepare(
+        'INSERT INTO checkins (name, country, status, start_at)
+         VALUES (?, ?, "pending", DATE_ADD(NOW(), INTERVAL ? SECOND))'
+    );
+    $stmt->execute([$name, $country !== '' ? $country : null, $countdown]);
     $id = (int)$pdo->lastInsertId();
+
+    $row = $pdo->prepare('SELECT start_at FROM checkins WHERE id = ?');
+    $row->execute([$id]);
+    $startAt = $row->fetchColumn();
 
     echo json_encode([
         'success' => true,
-        'checkin' => ['id' => $id, 'name' => $name, 'country' => $country],
+        'checkin' => [
+            'id' => $id,
+            'name' => $name,
+            'country' => $country,
+            'start_at' => $startAt,
+        ],
+        'countdown_seconds' => $countdown,
     ]);
 } catch (Throwable $e) {
     http_response_code(500);

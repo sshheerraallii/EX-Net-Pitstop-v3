@@ -175,10 +175,6 @@ class GameSession {
     this.awaitingBaseline = false;
     this.snmpOk = false;
     this.lastSnmpError = null;
-    // Every non-target port brought up during the current scenario. Cumulative:
-    // a wrong cable still counts even after it's pulled back out. Drives the
-    // silent penalty - it never fails or skips the scenario.
-    this.wrongPortsSeen = new Set();
 
     for (let i = 1; i <= 24; i += 1) {
       this.portStates.set(i, {
@@ -194,7 +190,6 @@ class GameSession {
     this.gameStartTime = new Date();
     this.gameEndTime = null;
     this.isGameActive = true;
-    this.wrongPortsSeen = new Set();
 
     // Ports already up when the scenario starts (cables left in from the previous
     // scenario) must not count. The baseline is captured on the next SNMP read,
@@ -375,7 +370,6 @@ class GameSession {
     this.activePorts = new Set();
     this.baselinePorts = new Set();
     this.awaitingBaseline = false;
-    this.wrongPortsSeen = new Set();
     this.gameStartTime = null;
     this.gameEndTime = null;
     this.isGameActive = false;
@@ -404,8 +398,9 @@ class GameSession {
     return plugged;
   }
 
-  // Kept for reference / debugging: true once as many ports are plugged as the
-  // scenario needs, right or wrong. No longer what resolves a scenario.
+  // What resolves a scenario: the player has plugged in at least as many ports
+  // as the scenario needs, right or wrong. The submit endpoint decides whether
+  // the exact set was correct and applies the silent penalty if not.
   isCountComplete() {
     if (!this.isGameActive || this.activePorts.size === 0) {
       return false;
@@ -414,48 +409,7 @@ class GameSession {
     return this.getNewlyPluggedPorts().length >= this.activePorts.size;
   }
 
-  // Fold any non-target port that's currently up into wrongPortsSeen. Called on
-  // every state read so a wrong cable is remembered even if it's pulled again
-  // before the scenario is solved.
-  recordWrongPorts() {
-    if (!this.isGameActive) return;
-
-    for (let i = 1; i <= 24; i += 1) {
-      const state = this.portStates.get(i);
-      if (
-        state &&
-        state.status === "up" &&
-        !this.baselinePorts.has(i) &&
-        !this.activePorts.has(i)
-      ) {
-        this.wrongPortsSeen.add(i);
-      }
-    }
-  }
-
-  // The scenario is genuinely solved: every required port is up and no wrong
-  // port is currently plugged in. This - not the count - is what advances a
-  // scenario now, so wrong ports can't fail or skip it.
-  isCorrectComplete() {
-    if (!this.isGameActive || this.activePorts.size === 0) {
-      return false;
-    }
-
-    const requiredAllUp = Array.from(this.activePorts).every((port) => {
-      const state = this.portStates.get(port);
-      return state && state.status === "up";
-    });
-    if (!requiredAllUp) return false;
-
-    const hasExtras = this.getNewlyPluggedPorts().some(
-      (port) => !this.activePorts.has(port)
-    );
-    return !hasExtras;
-  }
-
   getGameState() {
-    this.recordWrongPorts();
-
     const ports = [];
 
     for (let i = 1; i <= 24; i += 1) {
@@ -478,8 +432,6 @@ class GameSession {
       ports,
       newlyPluggedPorts: this.getNewlyPluggedPorts(),
       countComplete: this.isCountComplete(),
-      correctComplete: this.isCorrectComplete(),
-      wrongPortsSeen: Array.from(this.wrongPortsSeen),
       baselineCaptured: !this.awaitingBaseline,
       snmpOk: this.snmpOk,
       snmpError: this.lastSnmpError,
@@ -1695,34 +1647,24 @@ app.post("/api/scenarios/submit", (req, res) => {
     const sortedRequired = [...requiredPorts].sort((a, b) => a - b);
     const sortedPlugged = [...plugged_ports].sort((a, b) => a - b);
 
+    // The scenario advances as soon as the player has plugged in the required
+    // NUMBER of ports - right or wrong. Getting the exact ports right costs
+    // nothing; getting them wrong costs a silent flat penalty that just rides
+    // along on the run time. Either way the scenario is "success" and the game
+    // moves on - it is never marked failed and never skipped.
     const isExactMatch =
       sortedRequired.length === sortedPlugged.length &&
       sortedRequired.every((port, idx) => port === sortedPlugged[idx]);
 
-    if (!isExactMatch) {
-      // The frontend only submits once a scenario is actually solved, so this
-      // is just a data-quality log - never a reason to fail the scenario.
-      console.warn(
-        `scenarios/submit ${scenario_run_id}: plugged [${sortedPlugged.join(
-          ", "
-        )}] != required [${sortedRequired.join(", ")}]`
-      );
-    }
-
-    // Wrong ports during the attempt cost a silent, flat penalty and nothing
-    // more - the scenario is never marked failed and never skipped. The player
-    // works the same scenario until it's right; the penalty just rides along on
-    // the run time.
-    const reportedWrong = Number(req.body.wrong_port_count);
-    const hadWrongPorts =
-      (Number.isFinite(reportedWrong)
-        ? reportedWrong
-        : gameSession.wrongPortsSeen.size) > 0;
-
     let penaltyApplied = 0;
-    if (hadWrongPorts) {
+    if (!isExactMatch) {
       penaltyApplied = 1;
       updateRunWithPenalty(run_id, PENALTY_MS);
+      console.log(
+        `scenarios/submit ${scenario_run_id}: wrong ports (plugged [${sortedPlugged.join(
+          ", "
+        )}] vs required [${sortedRequired.join(", ")}]) - ${PENALTY_MS}ms penalty`
+      );
     }
 
     const updatedScenarioRun = completeScenarioRun(
@@ -1738,9 +1680,9 @@ app.post("/api/scenarios/submit", (req, res) => {
     return res.json({
       success: true,
       result: "success",
-      message: hadWrongPorts
-        ? "Scenario completed (silent penalty applied)"
-        : "Scenario completed successfully!",
+      message: isExactMatch
+        ? "Scenario completed successfully!"
+        : "Scenario completed (silent penalty applied)",
       scenarioRun: updatedScenarioRun,
       penaltyApplied,
       nextScenario: nextPendingScenario || null,

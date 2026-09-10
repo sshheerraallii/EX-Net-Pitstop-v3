@@ -32,6 +32,11 @@ define('CHECKIN_API_KEY', 'REPLACE_ME_WITH_A_LONG_RANDOM_STRING');
 // from the list regardless of age.
 define('CHECKIN_STALE_MINUTES', 180);
 
+// How long the "get ready" countdown runs, on the tablet and on the kiosk,
+// after a player is checked in. Both count down to the same server-set
+// moment so they stay in sync.
+define('CHECKIN_COUNTDOWN_SECONDS', 20);
+
 function checkin_db() {
     static $pdo = null;
     if ($pdo === null) {

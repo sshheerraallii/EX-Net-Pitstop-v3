@@ -8,7 +8,9 @@ const http = require('http')
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
-const PORT = Number(process.env.PORT) || 3001
+// The packaged kiosk runs on its own port so it never collides with (or
+// silently reuses) a dev backend someone left running on 3001.
+const PORT = Number(process.env.PORT) || (app.isPackaged ? 3311 : 3001)
 const HEALTH_URL = `http://localhost:${PORT}/api/health`
 const APP_URL = `http://localhost:${PORT}/`
 

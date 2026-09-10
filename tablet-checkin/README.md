@@ -2,8 +2,10 @@
 
 This is the "mailbox" between the staff tablet and the kiosk when they're on
 two genuinely separate internet connections. Staff enter a player's name and
-country on the tablet; it lands here; the kiosk polls this and shows a live,
-tappable list. Everything here is plain PHP + MySQL, which works on
+pick a country on the tablet and tap **Check In**; it lands here; the kiosk
+(sitting on its idle screen) picks up the oldest waiting check-in on its own
+and runs a short countdown - the same countdown the tablet shows - before
+the game starts. Everything here is plain PHP + MySQL, which works on
 Hostinger's basic shared hosting (no Node required).
 
 ## What's in this folder
@@ -78,11 +80,12 @@ etc. Rebuild/redeploy the kiosk frontend after this change.
 
 ## 6. Test it
 
-- Visit `https://yourdomain.com/checkin/` on the tablet (or any browser) and
-  submit a test check-in — you should see a green "Sent" confirmation.
-- On the kiosk, open the player entry screen and switch to the
-  **Tablet Check-In** tab. Your test entry should appear within a few
-  seconds. Tap it to start a run, then confirm it disappears from the list.
+- Visit `https://yourdomain.com/checkin/` on the tablet (or any browser),
+  fill in a name, and tap **Check In** — the form should switch to a
+  countdown.
+- On the kiosk, sitting on its "Extreme Agent ONE has arrived" idle screen,
+  the same countdown should appear within a few seconds and the game should
+  start when it reaches zero.
 
 If the tablet page shows "not set up yet," `config.js` still has the
 placeholder key. If the kiosk tab shows "not set up yet," it's
@@ -92,9 +95,13 @@ check `TABLET_CHECKIN_API` and that the key matches in all three places
 
 ## Notes
 
+- **Updating an already-deployed table:** this version adds a `start_at`
+  column. In phpMyAdmin's SQL tab run:
+  `ALTER TABLE checkins ADD COLUMN start_at DATETIME DEFAULT NULL AFTER status;`
+- The countdown length (tablet and kiosk) is `CHECKIN_COUNTDOWN_SECONDS` in
+  `config.php` — 20 by default.
 - Check-ins older than 3 hours (`CHECKIN_STALE_MINUTES` in `config.php`)
-  stop showing in the list automatically, so a slow day doesn't leave stale
+  stop showing to the kiosk automatically, so a slow day doesn't leave stale
   entries piling up. Change that number if you want a different window.
-- The manual entry and QR code tabs are untouched — tablet check-in is a
-  third option, not a replacement, so staff always have a fallback if the
-  tablet or the internet acts up.
+- If the tablet or the relay is down, booth staff can still start a game
+  from the kiosk's corner menu → **Start game (no check-in)**.

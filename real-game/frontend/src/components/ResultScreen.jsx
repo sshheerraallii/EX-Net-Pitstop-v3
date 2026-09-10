@@ -10,6 +10,10 @@ import './ResultScreen.css'
 // (trophy, ordinal, confetti) before the leaderboard reveal underneath.
 const CELEBRATION_DURATION_MS = 4500
 
+// The kiosk is unattended - once the result + leaderboard have been on screen
+// this long, drop back to the idle attract screen for the next player.
+const RESULT_DWELL_MS = 20000
+
 // Counts up from 0 to the final time instead of just appearing - gives the
 // result a "reveal" beat instead of a flat number dump, matching the
 // animated-everything feel the rest of the game already has (typing text,
@@ -63,7 +67,7 @@ function ScenarioStatusBadge({ success }) {
   )
 }
 
-function ResultScreen({ gameResult, onPlayAgain }) {
+function ResultScreen({ gameResult, onDone }) {
   const [leaderboard, setLeaderboard] = useState([])
   const [playerRank, setPlayerRank] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -96,6 +100,14 @@ function ResultScreen({ gameResult, onPlayAgain }) {
     const timer = setTimeout(() => setCelebrationDismissed(true), CELEBRATION_DURATION_MS)
     return () => clearTimeout(timer)
   }, [showCelebration])
+
+  // Once the result + leaderboard are actually on screen (celebration done),
+  // hold for RESULT_DWELL_MS then hand back to the idle attract screen.
+  useEffect(() => {
+    if (loading || showCelebration) return
+    const timer = setTimeout(() => onDone(), RESULT_DWELL_MS)
+    return () => clearTimeout(timer)
+  }, [loading, showCelebration, onDone])
 
   const formatTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000)
@@ -230,12 +242,6 @@ function ResultScreen({ gameResult, onPlayAgain }) {
               </div>
             </div>
           )}
-        </div>
-
-        <div className="result-actions">
-          <button className="play-again-btn" onClick={onPlayAgain}>
-            Play Again
-          </button>
         </div>
       </div>
     </div>

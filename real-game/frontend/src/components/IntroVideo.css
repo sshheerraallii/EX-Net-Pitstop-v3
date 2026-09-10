@@ -117,6 +117,10 @@
 }
 
 .intro-headline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
   margin: 0 0 16px;
   font-size: clamp(1.9rem, 4.4vw, 3.1rem);
   font-weight: 600;
@@ -125,6 +129,14 @@
   color: var(--text);
   opacity: 0;
   animation: introUp 0.75s ease-out 0.4s forwards;
+}
+
+/* Small Agent One mark sitting inline right before the wordmark. */
+.intro-headline-mark {
+  width: 0.95em;
+  height: 0.95em;
+  flex-shrink: 0;
+  filter: drop-shadow(0 4px 14px rgba(117, 25, 249, 0.5));
 }
 
 .intro-tm {
@@ -136,7 +148,7 @@
 }
 
 .intro-sub {
-  margin: 0 0 40px;
+  margin: 0 0 24px;
   max-width: 560px;
   font-size: clamp(1rem, 1.6vw, 1.2rem);
   line-height: 1.6;
@@ -145,68 +157,44 @@
   animation: introUp 0.75s ease-out 0.6s forwards;
 }
 
-/* Glowing pill CTA - stands in for Agent One's "Ask me anything" bar. The
-   glow is steady, not pulsing. */
-.intro-cta {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  padding: 17px 30px;
-  border-radius: 999px;
-  border: 1px solid rgba(125, 118, 242, 0.5);
-  background: linear-gradient(150deg, rgba(117, 25, 249, 0.22) 0%, rgba(244, 39, 200, 0.14) 100%), #0c0912;
-  color: var(--text);
-  font-size: 1.05rem;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 0 0 1px rgba(117, 25, 249, 0.3),
-    0 0 26px rgba(117, 25, 249, 0.4),
-    0 0 60px rgba(244, 39, 200, 0.24);
+/* Quiet "waiting for a check-in" line where the CTA used to be. */
+.intro-waiting {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-faint);
   opacity: 0;
   animation: introUp 0.75s ease-out 0.85s forwards;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.intro-cta::before {
-  content: '';
-  position: absolute;
-  inset: -16px;
-  z-index: -1;
-  border-radius: 999px;
-  background: radial-gradient(60% 70% at 30% 50%, rgba(117, 25, 249, 0.4), transparent 70%),
-    radial-gradient(60% 70% at 80% 50%, rgba(244, 39, 200, 0.3), transparent 72%);
-  filter: blur(16px);
-  pointer-events: none;
+/* Countdown shown once a player is checked in - lines up with the tablet. */
+.intro-countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: introUp 0.5s ease-out both;
 }
 
-.intro-cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 0 1px rgba(125, 118, 242, 0.55),
-    0 0 34px rgba(117, 25, 249, 0.55),
-    0 0 78px rgba(244, 39, 200, 0.34);
+.intro-countdown-name {
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  font-weight: 600;
+  color: var(--text);
 }
 
-.intro-cta:active {
-  transform: translateY(0);
-}
-
-.intro-cta-icon {
-  width: 22px;
-  height: 22px;
-}
-
-.intro-cta-divider {
-  width: 1px;
-  height: 20px;
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.intro-cta-hint {
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--text-faint);
+.intro-countdown-num {
+  margin: 6px 0 10px;
+  font-size: clamp(4.5rem, 12vw, 8rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--steel);
   font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 40px rgba(125, 118, 242, 0.5);
+}
+
+.intro-countdown-hint {
+  font-size: 0.95rem;
+  color: var(--text-muted);
 }
 
 @keyframes introUp {
@@ -243,20 +231,6 @@
   }
 
   .intro-sub {
-    margin-bottom: 30px;
-  }
-
-  .intro-cta {
-    padding: 14px 22px;
-    font-size: 0.95rem;
-    gap: 10px;
-  }
-
-  .intro-cta-hint {
-    display: none;
-  }
-
-  .intro-cta-divider {
-    display: none;
+    margin-bottom: 20px;
   }
 }

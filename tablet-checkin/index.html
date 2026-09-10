@@ -15,8 +15,11 @@
         <img src="extreme-logo.png" alt="Extreme Networks" class="checkin-logo" />
 
         <div class="checkin-header">
-          <h1>Agent Check-In</h1>
-          <p>Enter the player's details, then send them to the kiosk.</p>
+          <h1>
+            <img src="agent-one-logo.svg" alt="" class="checkin-header-mark" />
+            <span>Agent Check-In</span>
+          </h1>
+          <p>Enter the player's details and check them in — the game starts on the kiosk after a short countdown.</p>
         </div>
 
         <form id="checkinForm" class="checkin-form" autocomplete="off">
@@ -27,19 +30,23 @@
 
           <div class="form-group">
             <label for="country">Country</label>
-            <input id="country" name="country" type="text" placeholder="Player's country (optional)" />
+            <select id="country" name="country">
+              <option value="">Select a country (optional)</option>
+            </select>
           </div>
 
           <div id="formMessage" class="form-message" hidden></div>
 
           <button type="submit" id="submitBtn" class="submit-btn">
-            <span id="submitLabel">Send to Kiosk</span>
+            <span id="submitLabel">Check In</span>
           </button>
         </form>
 
-        <div id="recentList" class="recent-list" hidden>
-          <div class="recent-title">Sent this session</div>
-          <ul id="recentItems"></ul>
+        <div id="countdownPanel" class="countdown-panel" hidden>
+          <div class="countdown-label">Checked in</div>
+          <div class="countdown-name" id="countdownName"></div>
+          <div class="countdown-num" id="countdownNum">20</div>
+          <div class="countdown-hint">Head to the kiosk — the game is starting.</div>
         </div>
       </div>
     </div>

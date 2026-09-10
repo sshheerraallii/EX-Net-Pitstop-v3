@@ -5,9 +5,11 @@ import './AppMenu.css'
 // Small, deliberately low-key navigation menu that rides along on every
 // screen (game + leaderboard). Collapsed to a plain icon in the corner;
 // click to expand. Lets booth staff jump between the game, the spectator
-// leaderboard and the check-in page, and start a fresh session (which
-// clears the current leaderboard) without leaving the kiosk.
-function AppMenu({ route, onNavigate, apiBase }) {
+// leaderboard and the check-in page, start a game by hand if the tablet is
+// down, restart the current game for the next player, and start a fresh
+// session (which clears the current leaderboard) - all without leaving the
+// kiosk.
+function AppMenu({ route, onNavigate, onRestartGame, onStaffStart, apiBase }) {
   const [open, setOpen] = useState(false)
   const [resetPhase, setResetPhase] = useState('idle') // idle | confirm | working | done | error
   const rootRef = useRef(null)
@@ -40,6 +42,20 @@ function AppMenu({ route, onNavigate, apiBase }) {
     setOpen(false)
     setResetPhase('idle')
     onNavigate(to)
+  }
+
+  const restartGame = () => {
+    setOpen(false)
+    setResetPhase('idle')
+    onNavigate('/')
+    onRestartGame()
+  }
+
+  const staffStart = () => {
+    setOpen(false)
+    setResetPhase('idle')
+    onNavigate('/')
+    onStaffStart()
   }
 
   const doReset = async () => {
@@ -100,6 +116,28 @@ function AppMenu({ route, onNavigate, apiBase }) {
           </a>
 
           <div className="app-menu-sep" role="separator"></div>
+
+          {resetPhase === 'idle' && (
+            <button
+              type="button"
+              className="app-menu-item"
+              role="menuitem"
+              onClick={staffStart}
+            >
+              Start game (no check-in)
+            </button>
+          )}
+
+          {resetPhase === 'idle' && (
+            <button
+              type="button"
+              className="app-menu-item"
+              role="menuitem"
+              onClick={restartGame}
+            >
+              Restart game
+            </button>
+          )}
 
           {resetPhase === 'idle' && (
             <button

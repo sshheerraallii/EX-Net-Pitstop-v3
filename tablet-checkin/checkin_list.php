@@ -8,9 +8,9 @@ checkin_require_key();
 try {
     $pdo = checkin_db();
     $stmt = $pdo->prepare(
-        'SELECT id, name, country, created_at FROM checkins
+        'SELECT id, name, country, start_at, created_at FROM checkins
          WHERE status = "pending" AND created_at >= (NOW() - INTERVAL ? MINUTE)
-         ORDER BY created_at DESC
+         ORDER BY created_at ASC
          LIMIT 50'
     );
     $stmt->execute([CHECKIN_STALE_MINUTES]);

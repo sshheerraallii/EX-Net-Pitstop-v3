@@ -39,6 +39,12 @@ function ScenarioGame({ runId, player, onGameComplete }) {
   // Guards against a second submit firing while the first is in flight.
   const submittingRef = useRef(false)
   const stablePollsRef = useRef(0)
+  // False until this scenario's /api/game/start has returned. game/start resets
+  // every port on the switch, so any key press / toggle before it lands would
+  // be wiped a moment later - which on scenario 2+ (where game/start fires just
+  // as the screen appears and the player is already pressing keys) left ports
+  // un-registered and the scenario unable to complete.
+  const armedRef = useRef(false)
 
   // Load initial scenarios (only once per runId)
   const scenariosLoadedRef = useRef(false)
@@ -101,14 +107,15 @@ function ScenarioGame({ runId, player, onGameComplete }) {
   }
 
   // Tell the backend which ports this scenario targets, then watch live switch state.
-  // The scenario only resolves once the CORRECT ports are in (every required port
-  // up, no wrong port still plugged). Wrong ports along the way never fail or skip
-  // the scenario - the backend just adds a silent flat penalty to the run time.
+  // The scenario resolves once the player has plugged in the required NUMBER of
+  // ports - right or wrong. The backend advances either way ("success"); wrong
+  // ports just cost a silent flat penalty folded into the run time.
   useEffect(() => {
     if (!scenarioDetails || !currentScenarioRun) return
 
     let cancelled = false
     submittingRef.current = false
+    armedRef.current = false
     stablePollsRef.current = 0
     setLivePluggedPorts([])
 
@@ -121,8 +128,13 @@ function ScenarioGame({ runId, player, onGameComplete }) {
         console.error('Failed to arm switch session:', err.message)
       }
 
+      if (cancelled) return
+      // Ports have been reset and the target set is loaded - key presses and
+      // live port state are meaningful from here on.
+      armedRef.current = true
+
       const poll = async () => {
-        if (cancelled || submittingRef.current) return
+        if (cancelled || submittingRef.current || !armedRef.current) return
 
         try {
           const { data } = await axios.get(`${API_BASE}/game/status`)
@@ -141,15 +153,12 @@ function ScenarioGame({ runId, player, onGameComplete }) {
             return
           }
 
-          if (data.correctComplete) {
+          if (data.countComplete) {
             stablePollsRef.current += 1
 
             if (stablePollsRef.current >= STABLE_POLLS_REQUIRED) {
               submittingRef.current = true
-              submitScenario(
-                data.newlyPluggedPorts || [],
-                (data.wrongPortsSeen || []).length
-              )
+              submitScenario(data.newlyPluggedPorts || [])
             }
           } else {
             stablePollsRef.current = 0
@@ -169,11 +178,12 @@ function ScenarioGame({ runId, player, onGameComplete }) {
 
     return () => {
       cancelled = true
+      armedRef.current = false
       timerPromise.then((timer) => timer && clearInterval(timer))
     }
   }, [currentScenarioRun?.id, scenarioDetails?.id])
 
-  const submitScenario = async (pluggedPorts, wrongPortCount = 0) => {
+  const submitScenario = async (pluggedPorts) => {
     if (!currentScenarioRun || !scenarioDetails) return
 
     const timeMs = Date.now() - scenarioStartTime
@@ -184,7 +194,6 @@ function ScenarioGame({ runId, player, onGameComplete }) {
         run_id: runId,
         plugged_ports: pluggedPorts,
         time_ms: timeMs,
-        wrong_port_count: wrongPortCount,
       })
 
       setAllScenarioRuns((prev) => {
@@ -219,7 +228,9 @@ function ScenarioGame({ runId, player, onGameComplete }) {
 
     const onKeyDown = (event) => {
       if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return
-      if (submittingRef.current) return
+      // Ignore presses until game/start has reset the switch for this scenario,
+      // and while a submission is settling.
+      if (submittingRef.current || !armedRef.current) return
 
       const target = event.target
       if (target && /^(INPUT|TEXTAREA)$/.test(target.tagName)) return
@@ -260,12 +271,6 @@ function ScenarioGame({ runId, player, onGameComplete }) {
           requiredPorts={scenarioDetails.required_ports}
           pluggedPorts={livePluggedPorts}
         />
-      )}
-
-      {simulated && (
-        <div className="switch-offline-note">
-          Keyboard mode — 1-9 and A-O toggle ports 1-24
-        </div>
       )}
 
       {!switchOnline && !simulated && (

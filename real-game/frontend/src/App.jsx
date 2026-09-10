@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
-import PlayerEntry from './components/PlayerEntry'
 import ScenarioGame from './components/ScenarioGame'
 import ResultScreen from './components/ResultScreen'
 import IntroVideo from './components/IntroVideo'
@@ -24,10 +23,10 @@ function routeFromPath(pathname) {
 
 function App() {
   const [route, setRoute] = useState(() => routeFromPath(window.location.pathname))
-  const [gameState, setGameState] = useState('intro') // intro, playerEntry, game, result
+  // intro (idle attract + tablet check-in) -> game -> result -> back to intro
+  const [gameState, setGameState] = useState('intro')
   const [player, setPlayer] = useState(null)
   const [run, setRun] = useState(null)
-  const [scenarios, setScenarios] = useState([])
   const [gameResult, setGameResult] = useState(null)
 
   const navigate = useCallback((to) => {
@@ -43,7 +42,10 @@ function App() {
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
-  const handlePlayerCreated = async (playerData) => {
+  // Called by the intro screen once a checked-in player's countdown finishes
+  // (or by the staff "start without check-in" menu item).
+  const handleGameStart = useCallback(async (playerData) => {
+    if (!playerData) return
     setPlayer(playerData)
     try {
       const response = await axios.post(`${API_BASE}/run/start`, {
@@ -54,7 +56,21 @@ function App() {
     } catch (error) {
       console.error('Failed to start run:', error)
     }
-  }
+  }, [])
+
+  // Menu fallback for when the tablet / relay is unavailable.
+  const handleStaffStart = useCallback(async () => {
+    try {
+      const response = await axios.post(`${API_BASE}/player/manual`, {
+        name: 'Guest',
+        country: null,
+        source: 'staff',
+      })
+      handleGameStart(response.data.player)
+    } catch (error) {
+      console.error('Staff start failed:', error)
+    }
+  }, [handleGameStart])
 
   const handleGameComplete = async (totalTimeMs, scenarioRuns) => {
     try {
@@ -77,13 +93,12 @@ function App() {
     }
   }
 
-  const handleRestartGame = () => {
+  const handleReturnToIntro = useCallback(() => {
     setGameState('intro')
     setPlayer(null)
     setRun(null)
-    setScenarios([])
     setGameResult(null)
-  }
+  }, [])
 
   return (
     <div className="app">
@@ -91,13 +106,7 @@ function App() {
         <SpectatorLeaderboard />
       ) : (
         <>
-          {gameState === 'intro' && (
-            <IntroVideo onVideoEnd={() => setGameState('playerEntry')} />
-          )}
-
-          {gameState === 'playerEntry' && (
-            <PlayerEntry onPlayerCreated={handlePlayerCreated} />
-          )}
+          {gameState === 'intro' && <IntroVideo onGameStart={handleGameStart} />}
 
           {gameState === 'game' && run && (
             <ScenarioGame
@@ -110,13 +119,19 @@ function App() {
           {gameState === 'result' && gameResult && (
             <ResultScreen
               gameResult={gameResult}
-              onPlayAgain={handleRestartGame}
+              onDone={handleReturnToIntro}
             />
           )}
         </>
       )}
 
-      <AppMenu route={route} onNavigate={navigate} apiBase={API_BASE} />
+      <AppMenu
+        route={route}
+        onNavigate={navigate}
+        onRestartGame={handleReturnToIntro}
+        onStaffStart={handleStaffStart}
+        apiBase={API_BASE}
+      />
     </div>
   )
 }
