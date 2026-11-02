@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Extreme Agent One - Leaderboard</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="board">
+    <header class="board-head">
+      <img src="agent-one-logo.svg" class="board-mark" alt="">
+      <div class="board-titles">
+        <h1>Leaderboard</h1>
+        <p id="session-name">Live session</p>
+      </div>
+      <span class="board-live" id="live-pill">Live</span>
+    </header>
+
+    <ol class="board-table" id="rows">
+      <li class="board-row board-row--header">
+        <span class="c-rank">Rank</span>
+        <span class="c-name">Name</span>
+        <span class="c-country">Country</span>
+        <span class="c-time">Time</span>
+      </li>
+    </ol>
+
+    <p class="board-empty" id="empty">Loading…</p>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

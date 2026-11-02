@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import ScenarioDisplay from './ScenarioDisplay'
+import MissionHud from './MissionHud'
 import SuccessModal from './SuccessModal'
 import { API_BASE } from '../config'
+import { playSfx, duckMusic } from '../audio'
 import './ScenarioGame.css'
 
 // How often the kiosk asks the backend for live switch port state.
@@ -45,6 +47,14 @@ function ScenarioGame({ runId, player, onGameComplete }) {
   // as the screen appears and the player is already pressing keys) left ports
   // un-registered and the scenario unable to complete.
   const armedRef = useRef(false)
+  // Previous live port set, so each poll can tell which port was just seated
+  // and whether it was one the scenario asked for.
+  const prevPluggedRef = useRef([])
+  // Drives the one-shot hit / miss feedback on the frame a port changes.
+  const [portFeedback, setPortFeedback] = useState(null)
+  // Drives the full-screen wipe between scenarios, so one incident clearly
+  // ends and the next begins instead of the screen just swapping contents.
+  const [wiping, setWiping] = useState(false)
 
   // Load initial scenarios (only once per runId)
   const scenariosLoadedRef = useRef(false)
@@ -117,6 +127,7 @@ function ScenarioGame({ runId, player, onGameComplete }) {
     submittingRef.current = false
     armedRef.current = false
     stablePollsRef.current = 0
+    prevPluggedRef.current = []
     setLivePluggedPorts([])
 
     const startAndPoll = async () => {
@@ -142,7 +153,23 @@ function ScenarioGame({ runId, player, onGameComplete }) {
 
           setSwitchOnline(data.snmpOk !== false)
           setSimulated(data.simulated === true)
-          setLivePluggedPorts(data.newlyPluggedPorts || [])
+
+          // Compare against the previous poll to find ports seated since it.
+          // Right ones get a confirmation hit, wrong ones a buzzer and a
+          // shake - the player should know immediately, even though the
+          // penalty itself stays silent in the score.
+          const live = data.newlyPluggedPorts || []
+          const prev = prevPluggedRef.current
+          const added = live.filter((port) => !prev.includes(port))
+          if (added.length) {
+            const required = scenarioDetails?.required_ports || []
+            const wrong = added.some((port) => !required.includes(port))
+            playSfx(wrong ? 'beep5' : 'beep')
+            setPortFeedback({ kind: wrong ? 'miss' : 'hit', at: Date.now() })
+          }
+          prevPluggedRef.current = live
+
+          setLivePluggedPorts(live)
 
           // A dropped SNMP read serves stale state, and the baseline isn't known
           // until the first successful read. Neither should advance a scenario.
@@ -183,6 +210,13 @@ function ScenarioGame({ runId, player, onGameComplete }) {
     }
   }, [currentScenarioRun?.id, scenarioDetails?.id])
 
+  // Drop the hit / miss class again so the next port can retrigger it.
+  useEffect(() => {
+    if (!portFeedback) return
+    const t = window.setTimeout(() => setPortFeedback(null), 600)
+    return () => window.clearTimeout(t)
+  }, [portFeedback])
+
   const submitScenario = async (pluggedPorts) => {
     if (!currentScenarioRun || !scenarioDetails) return
 
@@ -205,11 +239,20 @@ function ScenarioGame({ runId, player, onGameComplete }) {
         return updated
       })
 
+      // Just the transition. The wrong-port buzzer already fired during play,
+      // and stacking it under the whoosh read as noise rather than as two
+      // separate events.
+      playSfx('whoosh')
+      setWiping(true)
+      window.setTimeout(() => setWiping(false), 900)
+
       setShowSuccess(true)
 
       setTimeout(() => {
         if (response.data.allCompleted) {
           const totalTime = Date.now() - gameStartTime
+          playSfx('runComplete')
+          duckMusic(4)
           onGameComplete(totalTime, allScenarioRuns)
         } else {
           loadCurrentScenario()
@@ -258,8 +301,21 @@ function ScenarioGame({ runId, player, onGameComplete }) {
   }
 
   return (
-    <div className="scenario-game">
+    <div
+      className={`scenario-game neon-ambient neon-floor${portFeedback ? ` is-${portFeedback.kind}` : ''}`}
+    >
       {error && <div className="error-banner">{error}</div>}
+
+      <div className="scenario-flash" aria-hidden="true" />
+      {wiping && <div className="scenario-wipe" aria-hidden="true" />}
+
+      {scenarioDetails && (
+        <MissionHud
+          startTime={gameStartTime}
+          current={currentScenarioRun?.scenario_order || 1}
+          total={allScenarioRuns.length}
+        />
+      )}
 
       {scenarioDetails && (
         <ScenarioDisplay

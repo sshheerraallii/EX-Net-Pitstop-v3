@@ -429,3 +429,34 @@
     font-size: 0.95rem;
   }
 }
+
+/* --- Neon stage ------------------------------------------------------- */
+
+.result-screen {
+  background:
+    var(--neon-stage),
+    radial-gradient(circle at 15% 10%, rgba(117, 25, 249, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(125, 118, 242, 0.12) 0%, transparent 45%),
+    var(--bg);
+}
+
+/* The finishing time is the one number the player came for, so it gets the
+   same gradient treatment as the intro's "ONE". */
+.time-value {
+  background: var(--neon-sweep);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(0 0 34px rgba(196, 77, 255, 0.45));
+}
+
+.rank-medal {
+  filter: drop-shadow(0 0 14px rgba(255, 213, 128, 0.35));
+}
+
+/* Same stacking fix as the scenario screen: keep the content above the
+   ambient sweep pseudo-element. */
+.result-screen > .result-container {
+  z-index: 2;
+}

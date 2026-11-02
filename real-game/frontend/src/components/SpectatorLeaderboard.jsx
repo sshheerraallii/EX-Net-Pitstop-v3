@@ -1,6 +1,7 @@
 import axios from 'axios'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { API_BASE } from '../config'
+import { unlockAudio, playSfx } from '../audio'
 import './SpectatorLeaderboard.css'
 
 // Standalone, always-on leaderboard for a second screen at the booth. Lives
@@ -48,6 +49,11 @@ function SpectatorLeaderboard() {
   const [rows, setRows] = useState([])
   const [session, setSession] = useState(null)
   const [status, setStatus] = useState('loading') // loading | ok | error
+  // Whoever currently holds first place. When that changes to someone new the
+  // board plays the takeover sting, which is the whole point of having a
+  // screen the crowd is watching.
+  const leaderRef = useRef(null)
+  const [takeover, setTakeover] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -59,7 +65,20 @@ function SpectatorLeaderboard() {
           axios.get(`${API_BASE}/session`).catch(() => null),
         ])
         if (!alive) return
-        setRows(lb.data.leaderboard || [])
+        const next = lb.data.leaderboard || []
+
+        // Identify the leader by player, not by position, so a reshuffle
+        // further down the board doesn't trigger a false takeover.
+        const topId = next.length ? (next[0].player_id ?? next[0].name) : null
+        const previous = leaderRef.current
+        if (topId != null && previous != null && topId !== previous) {
+          playSfx('takeover')
+          setTakeover(true)
+          window.setTimeout(() => setTakeover(false), 2600)
+        }
+        leaderRef.current = topId
+
+        setRows(next)
         if (sess && sess.data && sess.data.session) setSession(sess.data.session)
         setStatus('ok')
       } catch (error) {
@@ -77,8 +96,21 @@ function SpectatorLeaderboard() {
     }
   }, [])
 
+  // This screen is unattended and nobody taps it, so there is no gesture to
+  // unlock audio with. One pointer or key event on the booth machine arms it
+  // for the rest of the day; without that the takeover sting stays silent.
+  useEffect(() => {
+    const arm = () => unlockAudio({ startMusic: false })
+    window.addEventListener('pointerdown', arm, { once: true })
+    window.addEventListener('keydown', arm, { once: true })
+    return () => {
+      window.removeEventListener('pointerdown', arm)
+      window.removeEventListener('keydown', arm)
+    }
+  }, [])
+
   return (
-    <div className="splb">
+    <div className={`splb neon-ambient${takeover ? ' is-takeover' : ''}`}>
       <div className="splb-bg" aria-hidden="true">
         <img src="/extreme-logo.png" alt="" />
       </div>
@@ -112,7 +144,9 @@ function SpectatorLeaderboard() {
             {rows.map((r, i) => (
               <li
                 key={r.player_id != null ? r.player_id : i}
-                className={`splb-row ${i < 3 ? 'splb-row--podium' : ''}`}
+                className={`splb-row ${i < 3 ? 'splb-row--podium' : ''}${
+                  takeover && i === 0 ? ' splb-row--takeover' : ''
+                }`}
                 style={{ animationDelay: `${i * 45}ms` }}
               >
                 <span className="splb-c-rank">

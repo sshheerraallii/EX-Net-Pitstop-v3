@@ -1,0 +1,81 @@
+/* Shared neon layer.
+   The attract screen draws its own full SVG backdrop; every other screen uses
+   the cheaper CSS version here so the whole app reads as one piece without
+   nine animated bezier paths running behind a live game.
+
+   Imported once from index.css, so the tokens are available everywhere. */
+
+:root {
+  /* Neon range, taken from the Agent One mark's own gradient stops rather
+     than invented. These sit alongside the brand variables; they do not
+     replace --violet / --steel, which still drive ordinary UI chrome. */
+  --neon-blue: #4f6bff;
+  --neon-indigo: #8b7cff;
+  --neon-violet: #a647ff;
+  --neon-magenta: #f427c8;
+  --neon-pink: #ff6fd8;
+
+  --neon-sweep: linear-gradient(100deg, #8b7cff 0%, #b65cff 38%, #f427c8 78%, #ff6fd8 100%);
+
+  --neon-glow-sm: 0 0 18px rgba(166, 71, 255, 0.45);
+  --neon-glow-md: 0 0 38px rgba(166, 71, 255, 0.5);
+  --neon-glow-lg: 0 0 68px rgba(196, 77, 255, 0.6);
+  --neon-glow-hot: 0 0 48px rgba(244, 39, 200, 0.55);
+
+  /* The floor wash every screen shares, so moving between them feels like
+     moving around one space rather than between unrelated pages. */
+  --neon-stage:
+    radial-gradient(ellipse 85% 50% at 50% 104%, rgba(166, 71, 255, 0.22), transparent 68%),
+    radial-gradient(ellipse 55% 40% at 50% -6%, rgba(32, 0, 76, 0.85), transparent 72%);
+}
+
+/* Gradient-filled type. Used for the headline word, the countdown digits and
+   the finishing time - the three numbers/words the player actually looks at. */
+.neon-text {
+  background: var(--neon-sweep);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(0 0 30px rgba(196, 77, 255, 0.45));
+}
+
+/* Thin horizon line plus its wash - the shared "floor" the intro establishes. */
+.neon-floor::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 18vh;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(to bottom, rgba(166, 71, 255, 0.16), transparent 85%);
+  border-top: 1px solid rgba(201, 162, 255, 0.22);
+}
+
+/* Two slow diagonal light sweeps. Pure CSS, transform-only animation, so this
+   is cheap enough to leave running under an active scenario. */
+.neon-ambient::before {
+  content: '';
+  position: absolute;
+  inset: -20% -10%;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(74deg, transparent 38%, rgba(79, 107, 255, 0.10) 47%, transparent 56%),
+    linear-gradient(-74deg, transparent 38%, rgba(244, 39, 200, 0.09) 47%, transparent 56%);
+  animation: neon-sweep-drift 18s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes neon-sweep-drift {
+  from { transform: translate3d(-2%, 1%, 0) scale(1); }
+  to   { transform: translate3d(2%, -1%, 0) scale(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neon-ambient::before {
+    animation: none;
+  }
+}

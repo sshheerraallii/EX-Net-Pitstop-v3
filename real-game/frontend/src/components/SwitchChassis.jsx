@@ -138,6 +138,25 @@ function Port({ port, x, y, active, plugged }) {
           the number. Reads as "done" without an emoji or a color-only cue. */}
       {plugged && (
         <>
+          {/* One-shot burst on the port itself. These elements only exist
+              while `plugged` is true, so mounting plays the animation once -
+              no state or timers needed to retrigger it. */}
+          <circle
+            cx={x + PORT_W / 2}
+            cy={y + PORT_H / 2}
+            r="4"
+            fill="none"
+            stroke="var(--success)"
+            strokeWidth="2.5"
+            className="port-burst"
+          />
+          <circle
+            cx={x + PORT_W / 2}
+            cy={y + PORT_H / 2}
+            r="3"
+            fill="var(--success)"
+            className="port-burst-core"
+          />
           <rect
             x={x + 2}
             y={y + PORT_H / 2 - 1.5}

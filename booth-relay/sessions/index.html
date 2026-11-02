@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pitstop - Session control</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="panel">
+    <h1>Session control</h1>
+    <p class="lede">
+      Start a new session at the beginning of each show day. The board clears
+      and the kiosk resets its own leaderboard the next time it checks in.
+      Nothing is deleted — previous runs stay in the database, they just stop
+      being displayed.
+    </p>
+
+    <section class="card">
+      <h2>Current session</h2>
+      <div class="current" id="current">Loading…</div>
+      <div class="ack" id="ack"></div>
+    </section>
+
+    <section class="card">
+      <h2>Start a new session</h2>
+      <label for="name">Name (optional)</label>
+      <input id="name" type="text" placeholder="e.g. Day 2 — Thursday" autocomplete="off">
+      <button id="start" type="button">Start new session</button>
+      <p class="warn">
+        This clears the public leaderboard for everyone watching. It cannot be undone.
+      </p>
+      <div class="status" id="status"></div>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

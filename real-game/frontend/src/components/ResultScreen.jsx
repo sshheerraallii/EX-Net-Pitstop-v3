@@ -2,6 +2,7 @@ import axios from 'axios'
 import { useState, useEffect, useRef } from 'react'
 import RankCelebration from './RankCelebration'
 import { API_BASE } from '../config'
+import { playSfx, duckMusic } from '../audio'
 import './ResultScreen.css'
 
 // How long the top-3 celebration takeover plays before handing off to the
@@ -97,9 +98,20 @@ function ResultScreen({ gameResult, onDone }) {
   // past it, same as every other timed beat in this build.
   useEffect(() => {
     if (!showCelebration) return
+    // Duck the music under the celebration so the cheer and the stinger both
+    // land, then let it come back as the leaderboard appears.
+    playSfx('celebration')
+    duckMusic(CELEBRATION_DURATION_MS / 1000)
     const timer = setTimeout(() => setCelebrationDismissed(true), CELEBRATION_DURATION_MS)
     return () => clearTimeout(timer)
   }, [showCelebration])
+
+  // The time count-up is the reveal beat for everyone who didn't place, so it
+  // gets its own stinger once the screen is actually visible.
+  useEffect(() => {
+    if (loading || showCelebration) return
+    playSfx('resultReveal')
+  }, [loading, showCelebration])
 
   // Once the result + leaderboard are actually on screen (celebration done),
   // hold for RESULT_DWELL_MS then hand back to the idle attract screen.
@@ -119,7 +131,7 @@ function ResultScreen({ gameResult, onDone }) {
   const displayedTimeMs = useCountUp(gameResult.totalTime)
 
   return (
-    <div className="result-screen">
+    <div className="result-screen neon-ambient neon-floor">
       {/* Large Extreme wordmark sitting behind the content as a slowly
           pulsing/glowing watermark - the booth-screen ambient treatment the
           client asked for, replacing the old small fixed corner mark. */}

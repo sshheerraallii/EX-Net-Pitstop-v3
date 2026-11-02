@@ -1,9 +1,15 @@
+// Load .env before anything else: relay.js reads RELAY_* at require time,
+// so a later dotenv call would be too late and the relay would silently
+// disable itself even with a correct .env present.
+require("dotenv").config();
+
 const db = require("./db/database");
 const { seedScenarios } = require("./db/seed-scenarios");
 
 const express = require("express");
 const cors = require("cors");
 const snmp = require("net-snmp");
+const relay = require("./relay");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
@@ -1017,6 +1023,18 @@ app.post("/api/run/complete", (req, res) => {
     const summary = getPlayerResultSummary(result.run.player_id);
     const takeover = buildTakeoverFromSummary(summary, result.run);
 
+    // Push the finished run to the booth relay for the public spectator
+    // board. Fire and forget: it queues to disk and retries on its own, and
+    // must never delay or fail the player's result.
+    if (summary && summary.player) {
+      relay.pushResult({
+        runId: result.run.id,
+        name: summary.player.name,
+        country: summary.player.country,
+        timeMs: result.run.time_ms,
+      });
+    }
+
     if (takeover) {
       latestLeaderboardTakeover = takeover;
     }
@@ -1784,6 +1802,13 @@ app.use((req, res) => {
 });
 
 app.listen(port, () => {
+  // Outbound-only link to the booth relay: pushes finished runs to the
+  // public board and watches for a session reset requested from the admin
+  // page. No-op unless RELAY_BASE_URL and RELAY_API_KEY are set.
+  relay.start(async () => {
+    resetLeaderboardSession();
+  });
+
   console.log(`🕹️ Game server listening at http://localhost:${port}`);
   console.log(`📡 API Base URL: http://localhost:${port}/api`);
   console.log("📋 Available leaderboard extras:");

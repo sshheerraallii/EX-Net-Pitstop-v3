@@ -1,0 +1,120 @@
+/* Run clock + mission progress. Sits top-left, opposite the existing
+   scenario badge, and deliberately reads from across the booth - a spectator
+   watching over someone's shoulder should be able to follow the race. */
+
+.mission-hud {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  z-index: 26;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.hud-clock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 18px 12px;
+  border-radius: 12px;
+  background: rgba(12, 10, 18, 0.72);
+  border: 1px solid var(--border-strong);
+  backdrop-filter: blur(8px);
+  transition: border-color 0.6s ease, box-shadow 0.6s ease;
+}
+
+.hud-clock-label {
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-faint);
+}
+
+.hud-clock-value {
+  font-size: 2.1rem;
+  font-weight: 700;
+  line-height: 1;
+  /* Tabular figures stop the whole readout jittering as the tenths tick. */
+  font-variant-numeric: tabular-nums;
+  background: var(--neon-sweep);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Urgency is carried by the frame, not the digits - recolouring the numbers
+   would fight the neon gradient and lose legibility at distance. */
+.hud-clock--calm {
+  box-shadow: 0 0 22px rgba(117, 25, 249, 0.18);
+}
+
+.hud-clock--amber {
+  border-color: rgba(251, 191, 36, 0.55);
+  box-shadow: 0 0 26px rgba(251, 191, 36, 0.28);
+}
+
+.hud-clock--red {
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.34);
+  animation: hud-urgent 1.6s ease-in-out infinite;
+}
+
+@keyframes hud-urgent {
+  0%, 100% { box-shadow: 0 0 22px rgba(239, 68, 68, 0.22); }
+  50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.48); }
+}
+
+.hud-pips {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(12, 10, 18, 0.72);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+
+.hud-pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.hud-pip--done {
+  background: var(--success);
+  box-shadow: 0 0 10px rgba(23, 178, 106, 0.7);
+}
+
+.hud-pip--active {
+  background: var(--neon-magenta);
+  box-shadow: 0 0 12px rgba(244, 39, 200, 0.8);
+  animation: hud-pip-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes hud-pip-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.65; }
+}
+
+.hud-pips-label {
+  margin-left: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-pip--active,
+  .hud-clock--red {
+    animation: none;
+  }
+}

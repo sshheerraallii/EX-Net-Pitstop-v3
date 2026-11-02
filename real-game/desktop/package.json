@@ -1,7 +1,7 @@
 {
   "name": "extreme-agent-one-desktop",
   "productName": "Extreme Agent One",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "private": true,
   "description": "Kiosk shell for the Extreme Agent One game + spectator leaderboard. Runs the Node backend and shows the app full-screen.",
   "author": "Extreme Networks",
@@ -11,7 +11,8 @@
     "prepare-payload": "node scripts/prepare.mjs",
     "predist": "npm run prepare-payload",
     "dist": "electron-builder --win --x64",
-    "clean": "node -e \"require('fs').rmSync('build-staging',{recursive:true,force:true});require('fs').rmSync('release',{recursive:true,force:true})\""
+    "clean": "node -e \"require('fs').rmSync('build-staging',{recursive:true,force:true});require('fs').rmSync('release',{recursive:true,force:true})\"",
+    "dist:mac": "npm run prepare-payload && electron-builder --mac --universal"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.7.1",
@@ -60,6 +61,21 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Extreme Agent One",
       "include": "installer/installer.nsh"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "category": "public.app-category.games",
+      "icon": "build/icon.icns"
+    },
+    "dmg": {
+      "title": "Extreme Agent One"
     }
   }
 }

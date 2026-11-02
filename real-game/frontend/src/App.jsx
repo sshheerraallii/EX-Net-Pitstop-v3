@@ -106,7 +106,12 @@ function App() {
         <SpectatorLeaderboard />
       ) : (
         <>
-          {gameState === 'intro' && <IntroVideo onGameStart={handleGameStart} />}
+          {gameState === 'intro' && (
+            <IntroVideo
+              onGameStart={handleGameStart}
+              onStartMission={handleStaffStart}
+            />
+          )}
 
           {gameState === 'game' && run && (
             <ScenarioGame

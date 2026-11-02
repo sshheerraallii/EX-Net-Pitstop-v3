@@ -6,3 +6,9 @@ dist/
 .env
 Thumbs.db
 .DS_Store
+
+# Relay's on-disk retry queue - local runtime state, not source.
+relay-queue.json
+
+# Patch files handed over in chat; these have been committed by accident before.
+*.patch

@@ -1,73 +1,79 @@
-.intro-video {
-  width: 100%;
-  height: 100%;
+/* Attract screen - the mission title card.
+   Everything is drawn: no raster backdrop, so it stays sharp at whatever
+   resolution the booth display runs at. Colours come from the brand variables
+   in index.css; the only literals here are the neon gradient stops, which are
+   the Agent One mark's own magenta-to-blue range. */
+
+.intro-screen {
   position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 100%, rgba(117, 25, 249, 0.22), transparent 70%),
+    radial-gradient(ellipse 60% 45% at 50% 0%, rgba(32, 0, 76, 0.9), transparent 75%),
+    #04030a;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Near-black canvas with a faint cool cast, like the Agent One landing. */
-  background:
-    radial-gradient(1200px 700px at 50% 18%, #16131f 0%, transparent 60%),
-    #050409;
-  overflow: hidden;
 }
 
-/* Admin intro video, if present - pushed right back: heavily blurred, dim,
-   just texture behind the composition. */
+/* Optional admin-set video, kept as faint texture only */
 .intro-bg-video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  z-index: 1;
-  filter: blur(16px) saturate(0.7);
-  transform: scale(1.12);
-  opacity: 0.22;
+  opacity: 0.16;
+  filter: saturate(1.3);
 }
 
 .intro-bg-veil {
   position: absolute;
   inset: 0;
-  z-index: 2;
-  background: linear-gradient(160deg, var(--indigo) 0%, #000 100%);
-  mix-blend-mode: multiply;
-  opacity: 0.7;
-  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(4, 3, 10, 0.55), rgba(4, 3, 10, 0.95));
 }
 
-/* Soft violet / magenta ambient - two large radial washes that drift very
-   slowly. Movement, not blinking. */
-.intro-ambient {
+.neon-backdrop {
   position: absolute;
-  inset: -20%;
-  z-index: 3;
-  background:
-    radial-gradient(38% 42% at 32% 30%, rgba(117, 25, 249, 0.28), transparent 70%),
-    radial-gradient(42% 46% at 72% 68%, rgba(244, 39, 200, 0.2), transparent 72%);
-  filter: blur(30px);
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  animation: introAmbientDrift 24s ease-in-out infinite alternate;
 }
 
-@keyframes introAmbientDrift {
-  0% {
-    transform: translate3d(-1.5%, -1%, 0) scale(1);
+/* Each streak breathes on its own cycle. Transform and opacity only, so this
+   stays on the compositor and the idle screen doesn't cook the kiosk CPU. */
+.neon-streak {
+  transform-origin: 960px 1010px;
+  animation-name: streak-drift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  will-change: transform, opacity;
+}
+
+@keyframes streak-drift {
+  from {
+    transform: translateY(0) scaleY(1);
+    opacity: 0.35;
   }
-  100% {
-    transform: translate3d(2%, 1.5%, 0) scale(1.06);
+  to {
+    transform: translateY(-14px) scaleY(1.06);
+    opacity: 1;
   }
 }
 
 .intro-topbar {
   position: absolute;
-  top: 26px;
-  left: 30px;
-  z-index: 10;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 28px 40px;
   display: flex;
   align-items: center;
-  opacity: 0;
-  animation: introUp 0.7s ease-out 0.15s forwards;
+  z-index: 3;
 }
 
 .intro-brand {
@@ -78,159 +84,244 @@
 
 .intro-stack {
   position: relative;
-  z-index: 6;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 0 24px;
-  max-width: 720px;
+  padding: 0 32px;
+  transform: translateY(-2vh);
 }
 
-/* The real Agent One prism mark - fades and scales in, then keeps a slow,
-   gentle float. */
-.intro-prism {
-  width: clamp(84px, 12vw, 128px);
-  height: auto;
-  margin-bottom: 30px;
-  filter: drop-shadow(0 12px 40px rgba(117, 25, 249, 0.45));
-  opacity: 0;
-  transform: translateY(18px) scale(0.6);
-  animation: prismIn 0.9s cubic-bezier(0.22, 1.2, 0.36, 1) forwards,
-    prismFloat 6.5s ease-in-out 1s infinite;
-}
+/* --- Logo lockup ------------------------------------------------------- */
 
-@keyframes prismIn {
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes prismFloat {
-  0%, 100% {
-    transform: translateY(0) rotate(-2.5deg);
-  }
-  50% {
-    transform: translateY(-9px) rotate(2.5deg);
-  }
-}
-
-.intro-headline {
+.intro-lockup {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.5em;
-  margin: 0 0 16px;
-  font-size: clamp(1.9rem, 4.4vw, 3.1rem);
-  font-weight: 600;
-  line-height: 1.12;
-  letter-spacing: -0.015em;
-  color: var(--text);
-  opacity: 0;
-  animation: introUp 0.75s ease-out 0.4s forwards;
+  gap: 14px;
+  margin-bottom: clamp(24px, 4vh, 48px);
+  animation: intro-rise 0.9s ease-out both;
 }
 
-/* Small Agent One mark sitting inline right before the wordmark. */
-.intro-headline-mark {
-  width: 0.95em;
-  height: 0.95em;
-  flex-shrink: 0;
-  filter: drop-shadow(0 4px 14px rgba(117, 25, 249, 0.5));
+.intro-prism {
+  width: clamp(78px, 8vw, 120px);
+  height: auto;
+  filter: drop-shadow(0 0 28px rgba(166, 71, 255, 0.55));
+  animation: prism-float 6s ease-in-out infinite;
+}
+
+@keyframes prism-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.intro-wordmark {
+  font-weight: 500;
+  font-size: clamp(1.1rem, 1.6vw, 1.6rem);
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  color: var(--text);
+  opacity: 0.92;
 }
 
 .intro-tm {
-  font-size: 0.45em;
+  font-size: 0.42em;
   vertical-align: super;
-  font-weight: 500;
-  margin-left: 0.1em;
-  color: var(--text-muted);
+  letter-spacing: 0;
+  opacity: 0.75;
+}
+
+/* --- Headline ---------------------------------------------------------- */
+
+.intro-headline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0.92;
+  margin-bottom: clamp(20px, 3vh, 36px);
+  animation: intro-rise 0.9s ease-out 0.1s both;
+}
+
+.intro-headline-top,
+.intro-headline-main {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: clamp(3.4rem, 8.5vw, 8.5rem);
+  text-transform: uppercase;
+}
+
+.intro-headline-top {
+  color: var(--paper);
+  text-shadow: 0 0 60px rgba(201, 162, 255, 0.35);
+}
+
+.intro-headline-main {
+  display: inline-flex;
+  align-items: flex-start;
+  color: var(--paper);
+  text-shadow: 0 0 60px rgba(201, 162, 255, 0.35);
+}
+
+/* The "ONE" is the only gradient-filled type on the screen - it is the piece
+   the reference treats as the logo word. */
+.intro-headline-one {
+  font-style: normal;
+  margin-left: 0.22em;
+  background: linear-gradient(100deg, #8b7cff 0%, #b65cff 38%, #f427c8 78%, #ff6fd8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(0 0 34px rgba(244, 39, 200, 0.45));
+}
+
+.intro-headline-tm {
+  font-size: 0.17em;
+  font-weight: 700;
+  margin-top: 0.6em;
+  margin-left: 0.25em;
+  color: #e6ccff;
+  opacity: 0.85;
+}
+
+/* --- Tagline ----------------------------------------------------------- */
+
+.intro-tagline {
+  font-size: clamp(1.05rem, 1.75vw, 1.7rem);
+  font-weight: 700;
+  margin-bottom: 8px;
+  animation: intro-rise 0.9s ease-out 0.2s both;
+}
+
+.intro-tagline-accent {
+  color: #b98cff;
+}
+
+.intro-tagline-strong {
+  color: var(--paper);
 }
 
 .intro-sub {
-  margin: 0 0 24px;
-  max-width: 560px;
-  font-size: clamp(1rem, 1.6vw, 1.2rem);
-  line-height: 1.6;
+  font-size: clamp(0.95rem, 1.35vw, 1.3rem);
   color: var(--text-muted);
-  opacity: 0;
-  animation: introUp 0.75s ease-out 0.6s forwards;
+  font-weight: 400;
+  margin-bottom: clamp(28px, 4.5vh, 54px);
+  animation: intro-rise 0.9s ease-out 0.3s both;
 }
 
-/* Quiet "waiting for a check-in" line where the CTA used to be. */
+/* --- Call to action ---------------------------------------------------- */
+
+/* Hexagonal slab, matching the reference's clipped corners. clip-path means no
+   image and no extra element for the shape. */
+.intro-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 64px;
+  border: none;
+  background: linear-gradient(100deg, #7519f9 0%, #9b35ff 50%, #c44dff 100%);
+  color: var(--paper);
+  font-size: clamp(1.05rem, 1.5vw, 1.55rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  clip-path: polygon(26px 0, calc(100% - 26px) 0, 100% 50%, calc(100% - 26px) 100%, 26px 100%, 0 50%);
+  box-shadow: 0 0 48px rgba(149, 53, 255, 0.55);
+  animation: intro-rise 0.9s ease-out 0.4s both, cta-pulse 2.8s ease-in-out 1.4s infinite;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.intro-cta:hover:not(:disabled),
+.intro-cta:focus-visible:not(:disabled) {
+  transform: scale(1.035);
+  box-shadow: 0 0 72px rgba(196, 77, 255, 0.75);
+  outline: none;
+}
+
+.intro-cta:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.intro-cta:disabled {
+  cursor: default;
+  opacity: 0.55;
+  animation: intro-rise 0.9s ease-out 0.4s both;
+  box-shadow: 0 0 30px rgba(149, 53, 255, 0.3);
+}
+
+@keyframes cta-pulse {
+  0%, 100% { box-shadow: 0 0 44px rgba(149, 53, 255, 0.5); }
+  50% { box-shadow: 0 0 76px rgba(196, 77, 255, 0.78); }
+}
+
+.intro-cta-arrow {
+  display: inline-flex;
+  align-items: center;
+  color: var(--paper);
+}
+
 .intro-waiting {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
+  margin-top: clamp(18px, 2.6vh, 30px);
+  font-size: clamp(0.8rem, 1.05vw, 1rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
   color: var(--text-faint);
-  opacity: 0;
-  animation: introUp 0.75s ease-out 0.85s forwards;
+  animation: intro-rise 0.9s ease-out 0.5s both;
 }
 
-/* Countdown shown once a player is checked in - lines up with the tablet. */
+/* --- Countdown --------------------------------------------------------- */
+
 .intro-countdown {
   display: flex;
   flex-direction: column;
   align-items: center;
-  animation: introUp 0.5s ease-out both;
+  gap: 6px;
 }
 
 .intro-countdown-name {
-  font-size: clamp(1.1rem, 2vw, 1.5rem);
-  font-weight: 600;
-  color: var(--text);
+  font-size: clamp(1.1rem, 1.8vw, 1.8rem);
+  font-weight: 700;
+  color: var(--paper);
 }
 
+/* Re-keyed each second in the JSX, so this replays per tick */
 .intro-countdown-num {
-  margin: 6px 0 10px;
-  font-size: clamp(4.5rem, 12vw, 8rem);
+  font-size: clamp(6rem, 16vw, 15rem);
   font-weight: 700;
   line-height: 1;
-  color: var(--steel);
-  font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 40px rgba(125, 118, 242, 0.5);
+  background: linear-gradient(100deg, #8b7cff 0%, #c44dff 55%, #f427c8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(0 0 40px rgba(196, 77, 255, 0.5));
+  animation: count-pop 0.45s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+@keyframes count-pop {
+  from { transform: scale(1.35); opacity: 0.2; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 .intro-countdown-hint {
-  font-size: 0.95rem;
-  color: var(--text-muted);
+  font-size: clamp(0.85rem, 1.1vw, 1.05rem);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  color: var(--text-faint);
 }
 
-@keyframes introUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes intro-rise {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .intro-ambient,
-  .intro-prism {
-    animation-duration: 0.01ms;
-    animation-iteration-count: 1;
-  }
-}
-
-@media (max-width: 768px) {
-  .intro-topbar {
-    top: 16px;
-    left: 18px;
-  }
-
-  .intro-brand {
-    height: 20px;
-  }
-
-  .intro-prism {
-    margin-bottom: 22px;
-  }
-
-  .intro-sub {
-    margin-bottom: 20px;
+  .neon-streak,
+  .intro-prism,
+  .intro-cta {
+    animation: none !important;
   }
 }

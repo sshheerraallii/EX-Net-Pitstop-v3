@@ -59,5 +59,8 @@
       "*.test.js"
     ],
     "delay": "1000"
+  },
+  "allowScripts": {
+    "better-sqlite3": true
   }
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
+import { isMuted, toggleMuted } from '../audio'
 import './AppMenu.css'
 
 // Small, deliberately low-key navigation menu that rides along on every
@@ -12,6 +13,9 @@ import './AppMenu.css'
 function AppMenu({ route, onNavigate, onRestartGame, onStaffStart, apiBase }) {
   const [open, setOpen] = useState(false)
   const [resetPhase, setResetPhase] = useState('idle') // idle | confirm | working | done | error
+  // Booth staff need a way to kill the sound without killing the game - some
+  // venues cap stand volume, and the stand next door may be presenting.
+  const [muted, setMutedState] = useState(() => isMuted())
   const rootRef = useRef(null)
 
   useEffect(() => {
@@ -114,6 +118,17 @@ function AppMenu({ route, onNavigate, onRestartGame, onStaffStart, apiBase }) {
           <a className="app-menu-item" role="menuitem" href="/checkin">
             Check-in
           </a>
+
+          <div className="app-menu-sep" role="separator"></div>
+
+          <button
+            type="button"
+            role="menuitem"
+            className="app-menu-item"
+            onClick={() => setMutedState(toggleMuted())}
+          >
+            {muted ? 'Unmute sound' : 'Mute sound'}
+          </button>
 
           <div className="app-menu-sep" role="separator"></div>
 

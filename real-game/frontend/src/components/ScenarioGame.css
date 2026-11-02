@@ -52,3 +52,103 @@
   letter-spacing: 0.02em;
   z-index: 50;
 }
+
+/* --- Neon stage + port feedback -------------------------------------- */
+
+.scenario-game {
+  background:
+    var(--neon-stage),
+    var(--bg);
+}
+
+/* Full-bleed colour wash fired on the frame a port is seated. Opacity-only,
+   so it composites without touching layout mid-game. */
+.scenario-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.scenario-game.is-hit .scenario-flash {
+  background: radial-gradient(ellipse 70% 50% at 50% 100%, rgba(23, 178, 106, 0.30), transparent 70%);
+  animation: feedback-flash 0.5s ease-out;
+}
+
+.scenario-game.is-miss .scenario-flash {
+  background: radial-gradient(ellipse 70% 50% at 50% 100%, rgba(239, 68, 68, 0.32), transparent 70%);
+  animation: feedback-flash 0.5s ease-out;
+}
+
+@keyframes feedback-flash {
+  0% { opacity: 0; }
+  18% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* A wrong port shakes the frame. Deliberately small - this is a nudge, not a
+   punishment, and the scoring penalty stays silent as the client asked. */
+.scenario-game.is-miss {
+  animation: feedback-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes feedback-shake {
+  10%, 90% { transform: translate3d(-3px, 0, 0); }
+  20%, 80% { transform: translate3d(5px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+  40%, 60% { transform: translate3d(8px, 0, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scenario-game.is-miss { animation: none; }
+  .scenario-flash { animation: none !important; }
+}
+
+/* The ambient sweep is a positioned pseudo-element, so without this the
+   scenario content (which is position:relative but has no z-index) would sit
+   underneath it and pick up a faint wash. */
+.scenario-game > .scenario-display {
+  z-index: 1;
+}
+
+/* --- Scenario transition wipe ----------------------------------------- */
+
+/* A neon bar sweeps the screen when an incident is cleared. Short, and on
+   transform only, so it reads as a cut between scenarios rather than a
+   loading state. */
+.scenario-wipe {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.scenario-wipe::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 45%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(139, 124, 255, 0.22) 30%,
+    rgba(244, 39, 200, 0.5) 50%,
+    rgba(139, 124, 255, 0.22) 70%,
+    transparent 100%
+  );
+  filter: blur(2px);
+  animation: wipe-sweep 0.9s cubic-bezier(0.5, 0, 0.3, 1) forwards;
+}
+
+@keyframes wipe-sweep {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(340%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scenario-wipe { display: none; }
+}

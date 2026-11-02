@@ -51,6 +51,9 @@ const SKIP = new Set([
   'pitstop.db',
   'pitstop.db-shm',
   'pitstop.db-wal',
+  // The relay's retry queue is local runtime state. Shipping one inside an
+  // installer would replay a previous machine's results onto the board.
+  'relay-queue.json',
 ])
 cpSync(backendDir, stageDir, {
   recursive: true,
