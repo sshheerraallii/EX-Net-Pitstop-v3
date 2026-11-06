@@ -12,3 +12,7 @@ relay-queue.json
 
 # Patch files handed over in chat; these have been committed by accident before.
 *.patch
+
+# Baked-in relay credentials for packaged builds - bundled into the
+# installer, never committed.
+relay.local.json

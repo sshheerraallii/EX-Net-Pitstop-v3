@@ -11,10 +11,13 @@
 /* Progress now floats as a small badge instead of eating a whole header
    bar - the agent's message moved into the chat popup, so the old header
    row is gone and the image/switch panel get the reclaimed height. */
+/* Cleared to the left of the staff menu button (fixed, top 16 / right 16,
+   34px wide). At right:24 the menu sat on top of the badge and ate the last
+   character, so "Scenario 4/4" read as "Scenario 4/". */
 .progress-badge {
   position: absolute;
   top: 20px;
-  right: 24px;
+  right: 66px;
   z-index: 25;
   padding: 8px 16px;
   background: rgba(12, 10, 18, 0.75);
@@ -38,9 +41,13 @@
   background: var(--bg);
 }
 
+/* Capped rather than flex:1. With the per-category cards gone the image
+   would otherwise swallow the whole screen and leave the switch pinned to
+   the very bottom edge - the client asked for the opposite, the switch
+   raised into the freed space. */
 .scenario-image-container {
   position: relative;
-  flex: 1;
+  flex: 0 1 50%;
   min-height: 0;
   width: 100%;
   background: var(--bg);
@@ -67,13 +74,17 @@
 /* The switch is no longer a photo - it's a custom vector faceplate we draw
    and animate ourselves, sitting in a designed panel instead of floating in
    dead space. */
+/* Takes the lower half and centres the faceplate in it, so the switch sits
+   around the middle of the screen instead of in a strip along the bottom. */
 .switch-panel-card {
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 20px 32px 26px;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px 32px;
   background: radial-gradient(circle at 50% -20%, rgba(117, 25, 249, 0.16) 0%, transparent 60%), var(--surface);
   border-top: 1px solid var(--border);
 }
@@ -150,7 +161,7 @@
 @media (max-width: 768px) {
   .progress-badge {
     top: 12px;
-    right: 12px;
+    right: 58px;
     font-size: 0.72rem;
     padding: 6px 12px;
   }

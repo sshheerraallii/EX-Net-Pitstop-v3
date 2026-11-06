@@ -1,35 +1,9 @@
+/* The faceplate is 1220x156, so it is all width and very little height.
+   With the middle cards gone there is real vertical room, so it renders
+   larger - the port numbers are what players squint at across a booth. */
 .switch-chassis {
   width: 100%;
   height: auto;
-  max-width: 1180px;
+  max-width: min(1500px, 94vw);
   overflow: visible;
-}
-
-/* One-shot burst when a cable seats. Mounted only while the port is
-   plugged, so the animation fires once on mount and then holds at its end
-   state (invisible) rather than looping. */
-.port-burst {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: port-burst-ring 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
-}
-
-@keyframes port-burst-ring {
-  from { transform: scale(0.6); opacity: 0.9; }
-  to { transform: scale(4.5); opacity: 0; }
-}
-
-.port-burst-core {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: port-burst-core 0.4s ease-out forwards;
-}
-
-@keyframes port-burst-core {
-  from { transform: scale(1); opacity: 0.85; }
-  to { transform: scale(2.4); opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .port-burst, .port-burst-core { animation: none; opacity: 0; }
 }

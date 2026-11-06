@@ -60,14 +60,6 @@ function RankBadge({ rank }) {
   )
 }
 
-function ScenarioStatusBadge({ success }) {
-  return (
-    <span className={`scenario-status-badge ${success ? 'success' : 'failure'}`}>
-      {success ? '✓' : '✕'}
-    </span>
-  )
-}
-
 function ResultScreen({ gameResult, onDone }) {
   const [leaderboard, setLeaderboard] = useState([])
   const [playerRank, setPlayerRank] = useState(null)
@@ -185,28 +177,6 @@ function ResultScreen({ gameResult, onDone }) {
               <div className="time-label">Your Time</div>
               <div className="time-value">
                 {formatTime(displayedTimeMs)}
-              </div>
-            </div>
-
-            <div className="scenarios-summary">
-              <h3>Scenarios Summary</h3>
-              <div className="scenarios-list">
-                {gameResult.scenarioRuns.map((sr, idx) => (
-                  <div
-                    key={idx}
-                    className={`scenario-row ${sr.result}`}
-                    style={{ animationDelay: `${idx * 70}ms` }}
-                  >
-                    <span className="scenario-num">Scenario {idx + 1}</span>
-                    <span className="scenario-result">
-                      <ScenarioStatusBadge success={sr.result === 'success'} />
-                      {sr.result === 'success' ? 'Success' : 'Failed'}
-                    </span>
-                    <span className="scenario-time">
-                      {(sr.time_ms / 1000).toFixed(1)}s
-                    </span>
-                  </div>
-                ))}
               </div>
             </div>
           </div>

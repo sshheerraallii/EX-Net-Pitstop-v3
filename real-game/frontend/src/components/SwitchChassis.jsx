@@ -56,7 +56,11 @@ const VENT_DOTS = buildVentDots()
 // the requested ports they still have left to do.
 function Port({ port, x, y, active, plugged }) {
   const pending = active && !plugged
-  const labelY = y === ROW0_Y ? y - 6 : y + PORT_H + 13
+  // Bottom-row labels sit far enough below the port to clear the highlight
+  // ring's lower edge. At +13 the enlarged active label (14px vs 9px) ran
+  // straight through the ring stroke, green on green, and the port number
+  // became unreadable - the exact thing a player needs to read.
+  const labelY = y === ROW0_Y ? y - 6 : y + PORT_H + 18
   const pinAreaX = x + 7
   const pinW = (PORT_W - 14) / 8
 
@@ -134,8 +138,11 @@ function Port({ port, x, y, active, plugged }) {
         {pending && <animate attributeName="opacity" values="1;0.4;1" dur="0.8s" repeatCount="indefinite" />}
       </text>
 
-      {/* Seated-cable marker: a latch bar across the port mouth plus a tick above
-          the number. Reads as "done" without an emoji or a color-only cue. */}
+      {/* Seated-cable marker: a latch bar across the port mouth. There used to
+          be a tick above the number too, but it sat on top of the port number
+          and made it unreadable - which is the one thing on this panel the
+          player actually has to read. The steady ring and solid LED already
+          carry "seated". */}
       {plugged && (
         <>
           {/* One-shot burst on the port itself. These elements only exist
@@ -165,14 +172,6 @@ function Port({ port, x, y, active, plugged }) {
             rx="1.5"
             fill="var(--success)"
             fillOpacity="0.9"
-          />
-          <polyline
-            points={`${x + PORT_W / 2 - 6},${labelY - 12} ${x + PORT_W / 2 - 2},${labelY - 8} ${x + PORT_W / 2 + 6},${labelY - 18}`}
-            fill="none"
-            stroke="var(--success)"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
           />
         </>
       )}

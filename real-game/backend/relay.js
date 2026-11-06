@@ -140,16 +140,27 @@ async function flush() {
         continue;
       }
 
-      // 4xx means this payload will never be accepted, so retrying it would
-      // block every result behind it forever. Drop it and move on; 5xx and
-      // 409 (no active session yet) are worth waiting out.
-      if (result.status >= 400 && result.status < 500 && result.status !== 409) {
+      // A wrong or missing key (401/403) and "no active session yet" (409)
+      // are configuration states, not bad payloads - they get fixed and the
+      // queued results should still land, so keep them. Only a genuinely
+      // unacceptable request is dropped, because one of those at the head of
+      // the queue would block everything behind it forever. The 48h age cap
+      // stops the queue growing without bound if nobody ever fixes it.
+      const retryable = result.status === 401 || result.status === 403 || result.status === 409;
+      if (result.status >= 400 && result.status < 500 && !retryable) {
         console.warn(
           `Relay: rejected result ${item.run_uid} (${result.status}), dropping it`
         );
         queue.shift();
         saveQueue();
         continue;
+      }
+
+      if (result.status === 401 || result.status === 403) {
+        console.warn(
+          "Relay: the server refused our key (RELAY_API_KEY must match " +
+            "booth-relay/api/config.php). Holding results until it matches."
+        );
       }
 
       console.warn(`Relay: server returned ${result.status}, will retry`);

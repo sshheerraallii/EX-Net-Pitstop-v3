@@ -1,10 +1,6 @@
 import './ScenarioDisplay.css'
 import SwitchChassis from './SwitchChassis'
 import AgentChatBubble from './AgentChatBubble'
-import BranchLinkMap from './BranchLinkMap'
-import FirmwareUpgradeCard from './FirmwareUpgradeCard'
-import APRebootCard from './APRebootCard'
-import DataCenterResilienceCard from './DataCenterResilienceCard'
 
 function taskCopy(scenario) {
   if (scenario.name.includes('AP')) return 'reboot the Access Points'
@@ -49,41 +45,12 @@ function ScenarioDisplay({ scenario, progress, requiredPorts, pluggedPorts }) {
           />
         </div>
 
-        {/* Only renders for AP scenarios - turns "4x Access Points have gone
-            offline, let's give them a reboot" into a live status readout:
-            4 units mid-reboot-cycle instead of leaving it as text alone. */}
-        {scenario.category === 'AP' && <APRebootCard message={scenario.agent_message} />}
-
-        {/* Only renders for Branch scenarios - turns the "offline branch /
-            staged failover" narration into an actual broken-link diagram
-            instead of leaving it as text alone. Parses city names straight
-            out of the scenario's own message, so it's correct for all 3
-            Branch variants. */}
-        {scenario.category === 'Branch' && (
-          <BranchLinkMap
-            message={scenario.agent_message}
-            connected={
-              Array.isArray(requiredPorts) &&
-              requiredPorts.length > 0 &&
-              requiredPorts.every((port) => (pluggedPorts || []).includes(port))
-            }
-          />
-        )}
-
-        {/* Only renders for DataCenter scenarios - the odd one out: nothing
-            is currently broken here, the cable break already auto-failed-over
-            with zero disruption, so unlike Branch this shows both racks
-            online and a live (not staged) backup path already carrying
-            traffic. */}
-        {scenario.category === 'DataCenter' && <DataCenterResilienceCard />}
-
-        {/* Only renders for Firmware scenarios - Firmware's story is a
-            software-staging one (package downloaded, staged, waiting on
-            approval), not a geography one, so it gets a CSS/HTML animation
-            instead of an SVG diagram: a package drop-in, a shimmering
-            "staged" progress bar, a pulsing version chip, and all 3
-            switches shown queued for the same upgrade. */}
-        {scenario.category === 'Firmware' && <FirmwareUpgradeCard message={scenario.agent_message} />}
+        {/* The per-category cards (AP reboot, Branch link map, DataCenter
+            resilience, Firmware upgrade) used to sit here. Removed at the
+            client's request: on the booth screen they pushed the switch
+            faceplate down into the bottom strip, and the ports are the thing
+            players actually need to read. The space they freed goes to the
+            switch panel below. */}
 
         <div className="switch-panel-card">
           <div className="switch-panel-label">

@@ -2,6 +2,7 @@
 
 const { app, BrowserWindow, globalShortcut, dialog } = require('electron')
 const { fork } = require('child_process')
+const fs = require('fs')
 const path = require('path')
 const http = require('http')
 
@@ -63,6 +64,46 @@ async function waitForBackend(timeoutMs = 40000) {
   return false
 }
 
+// Relay credentials for the packaged build.
+//
+// `relay.local.json` sits next to this file, is gitignored, and is bundled
+// into the app at package time. That keeps the shared key out of the
+// repository while still letting an installer we hand to the client push
+// results to the public board without them configuring anything.
+//
+// The trade-off, accepted deliberately: anyone who unpacks the installer can
+// read the key, and could then write junk rows to the board or open a new
+// session. It grants nothing else - no database access, no read of anything
+// private - and the board is ours to reset.
+//
+// A real environment variable always wins, so a booth machine can point at a
+// different relay without rebuilding.
+function relaySettings() {
+  if (process.env.RELAY_BASE_URL && process.env.RELAY_API_KEY) return {}
+
+  try {
+    const file = path.join(__dirname, 'relay.local.json')
+    if (!fs.existsSync(file)) return {}
+
+    const cfg = JSON.parse(fs.readFileSync(file, 'utf8'))
+    const url = String(cfg.RELAY_BASE_URL || '').trim()
+    const key = String(cfg.RELAY_API_KEY || '').trim()
+
+    // Treat the shipped example values as absent, so a build that forgot to
+    // fill them in disables the relay instead of pointing at nothing.
+    if (!url || !key || key.startsWith('REPLACE_ME')) {
+      console.log('[shell] relay.local.json present but not filled in - relay stays off')
+      return {}
+    }
+
+    console.log('[shell] relay credentials loaded from relay.local.json')
+    return { RELAY_BASE_URL: url, RELAY_API_KEY: key }
+  } catch (error) {
+    console.error('[shell] could not read relay.local.json:', error.message)
+    return {}
+  }
+}
+
 async function startBackend() {
   // Someone (a prior session, or a separate auto-start) may already have it up.
   if (await pingHealth()) {
@@ -71,6 +112,7 @@ async function startBackend() {
   }
 
   const { entry, cwd, frontendDir } = backendPaths()
+  const relay = relaySettings()
 
   backendProc = fork(entry, [], {
     cwd,
@@ -85,6 +127,10 @@ async function startBackend() {
       // per-user folder.
       PITSTOP_DATA_DIR: path.join(app.getPath('userData'), 'data'),
       PITSTOP_FRONTEND_DIR: frontendDir,
+      // Baked-in relay credentials, if the build machine had them. Real
+      // environment variables still win, so a booth machine can override
+      // whatever was compiled in without a rebuild.
+      ...relay,
     },
     stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
   })

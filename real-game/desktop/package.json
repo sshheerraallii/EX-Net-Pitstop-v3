@@ -1,7 +1,7 @@
 {
   "name": "extreme-agent-one-desktop",
   "productName": "Extreme Agent One",
-  "version": "3.2.0",
+  "version": "3.2.2",
   "private": true,
   "description": "Kiosk shell for the Extreme Agent One game + spectator leaderboard. Runs the Node backend and shows the app full-screen.",
   "author": "Extreme Networks",
@@ -30,7 +30,9 @@
     "files": [
       "main.js",
       "preload.js",
-      "package.json"
+      "package.json",
+      "relay.local.json",
+      "relay.local.example.json"
     ],
     "extraResources": [
       {

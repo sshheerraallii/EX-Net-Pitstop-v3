@@ -1,0 +1,5 @@
+{
+  "_comment": "Copy this file to relay.local.json and fill in the two values. relay.local.json is gitignored but IS bundled into the installer, so the packaged app pushes results to the public board with no setup on the client's machine. Leave it absent to ship a build with the relay off.",
+  "RELAY_BASE_URL": "https://antiquewhite-jay-310571.hostingersite.com/booth-api",
+  "RELAY_API_KEY": "REPLACE_ME_WITH_THE_SAME_KEY_AS_API_CONFIG_PHP"
+}

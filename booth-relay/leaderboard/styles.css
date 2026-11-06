@@ -159,3 +159,19 @@ body.is-takeover {
 @media (prefers-reduced-motion: reduce) {
   .board-row, .board-row--takeover, body { animation: none !important; transition: none; }
 }
+
+/* Shown only before the board has ever connected, with the endpoint and the
+   server's own words. The first deployment failed silently behind a generic
+   "Reconnecting", which told nobody anything. */
+.board-empty-detail {
+  display: block;
+  margin-top: 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: clamp(0.72rem, 0.9vw, 0.9rem);
+  color: #fcd34d;
+  word-break: break-word;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.5;
+}

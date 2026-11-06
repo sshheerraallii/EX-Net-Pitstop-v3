@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import ScenarioDisplay from './ScenarioDisplay'
-import MissionHud from './MissionHud'
 import SuccessModal from './SuccessModal'
 import { API_BASE } from '../config'
 import { playSfx, duckMusic } from '../audio'
@@ -308,14 +307,6 @@ function ScenarioGame({ runId, player, onGameComplete }) {
 
       <div className="scenario-flash" aria-hidden="true" />
       {wiping && <div className="scenario-wipe" aria-hidden="true" />}
-
-      {scenarioDetails && (
-        <MissionHud
-          startTime={gameStartTime}
-          current={currentScenarioRun?.scenario_order || 1}
-          total={allScenarioRuns.length}
-        />
-      )}
 
       {scenarioDetails && (
         <ScenarioDisplay
